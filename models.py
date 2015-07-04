@@ -1,4 +1,4 @@
-from app import db
+from app import db, bcrypt
 
 class filestable(db.Model):
 	__tablename__ = 'filestable3'
@@ -28,7 +28,19 @@ class User(db.Model):
 
 	def __init__(self, username, password):
 		self.username = username
-		self.password = password
+		self.password = bcrypt.generate_password_hash(password)
+
+	def is_authenticated(self):
+		return True
+
+	def is_active(self):
+		return True
+
+	def is_anonymous(self):
+		return False
+
+	def get_id(self):
+		return unicode(self.id)
 
 	def __repr__(self):
 		return "<Username is '%s'" % (self.username)

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Base Page of Download Index</title>
+</head>
+<body>
+	<div class="container">
+
+		<!--child template -->
+		{% block content %}{% endblock %}
+
+		<!-- Errors -->
+		{% if error %}
+			<p class="error"><strong>Error:</strong>{{ error }}</p>
+		{% endif %}
+
+		<!-- Flashed Messages -->
+		{% for message in get_flashed_messages() %}
+			{{ message }}
+		{% endfor %}
+	</div>
+</body>
+</html>
