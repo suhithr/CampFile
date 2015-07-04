@@ -18,3 +18,17 @@ class filestable(db.Model):
 
 	def __repr__(self):
 		return "<Filename is '%s'" % (self.name)
+
+class User(db.Model):
+	__tablename__ = 'user1'
+
+	id = db.Column(db.Integer, primary_key=True)
+	username = db.Column(db.String, nullable=False)
+	password = db.Column(db.String, nullable=False)
+
+	def __init__(self, username, password):
+		self.username = username
+		self.password = password
+
+	def __repr__(self):
+		return "<Username is '%s'" % (self.username)

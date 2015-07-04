@@ -1,10 +1,11 @@
 #!/usr/bin/python
-from flask import Flask, render_template, url_for, request, session, redirect
+from flask import Flask, render_template, url_for, request, session, redirect, flash
 from werkzeug import secure_filename
 from flask.ext.sqlalchemy import SQLAlchemy
 #from flask.ext.uploads import save, Upload, delete
 import os
 import json
+from forms import LoginForm
 
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 
@@ -14,6 +15,7 @@ ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 #Make login possible 
 #Make it to see only your hostel stuff and friends
 #Add search
+#See how big the files can go
 #Add personal instant file sharing with WebRTC
 
 
@@ -65,6 +67,24 @@ def home():
 		'''
 
 	return render_template('index.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+	error = ''
+	form = LoginForm(request.form)
+	if request.method == 'POST': 
+		if form.validate_on_submit():
+			user = User.query.filter_by(username=request.form['username']).first()
+			if user is not None:
+				session['logged_in'] = True
+				flash('You are now logged.')
+				return redirect(url_for('home'))
+			else:
+				error = "Invalid Credentials, try again"
+		else:
+			render_template('login.html', form=form, error=error)
+	return render_template('login.html', form=form)
+
 
 #start the server with the run method
 if __name__ == '__main__':
