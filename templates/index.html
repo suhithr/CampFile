@@ -3,7 +3,7 @@
 <head>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js">
 	</script>
-	<script type=text/javascript>
+	<script type='text/javascript'>
 		//sets the global variable to the prefix to the root of the application
 		$SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 	</script>
@@ -14,19 +14,12 @@
 <body>
 	Pick a file to add
 	<form action="" method="POST" enctype="multipart/form-data" id="fileform">
-		<input type="file" name="files[]" required multiple="">
+		<input type="file" id="files" name="files[]" required multiple="" webkitdirectory="" mozdirectory="">
 			<input type="submit" value="upload">
 	</form>
 	<br>
 	<br>
-	{% if listoffiles %}
-		{% for file in listoffiles %}
-		<br>
-			{{ file.filename }}
-		<br>
-		{% endfor %}
-	{% endif %}
-	
+	<div id="output"></div>
 	{% with messages = get_flashed_messages() %}
 		{% if messages %}
 		<ul class="flashes">

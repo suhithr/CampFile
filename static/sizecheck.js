@@ -1,6 +1,17 @@
 $( document ).ready( readyFunction );
 
 function readyFunction() {
+	var input = document.getElementById('files');
+	var output = document.getElementById('output');
+	input.onchange = function(e) {
+		var files = e.target.files; //FileList
+		for (var i = 0, f; f = files[i]; ++i) {
+			output.innerText = output.innerText + files[i].webkitRelativePath + '\n';
+			console.log("name " + f.name);
+			console.log("size " + f.size);
+			console.log("extn " + String(f.name.substr( f.name.lastIndexOf('.') + 1)));
+		}
+	}
 	$("#fileform").submit( function(evnt) {
 
 		var url = $SCRIPT_ROOT;
@@ -22,8 +33,9 @@ function readyFunction() {
 
 
 		var form_data = '{ "names" : [' + names + '], "sizes" : [' + sizes + '], "extensions" : [' + extns + ']}';
-		alert(form_data);
 		var JsonFormData = JSON.parse(form_data);
+		alert(JsonFormData);
+		alert(JSON.stringify(JsonFormData));
 
 		$.ajax({
 			type: "POST", //Since the default is GET
@@ -37,7 +49,6 @@ function readyFunction() {
 			},
 			data: JSON.stringify(JsonFormData, null, '\t'),
 		});
-		alert("helo");
 		//Prevent it from submitting the data by default
 		evnt.preventDefault();
 	});

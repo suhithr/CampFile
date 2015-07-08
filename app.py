@@ -9,16 +9,22 @@ import os
 import json
 from forms import LoginForm, RegisterForm
 
-ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 
 #TODO
 #Build on Homepage a way to upload the file details and display -Done
 #Now, save to postgres database - Done
-#Make login possible 
+#Make login possible - Done
+#Make it check passwords on line 81 - Done
+#Allow folder upload in Chrome (USER FRIENDLINESS IS KING) - Done
+#Find limits of folder upload
+#Read the flask-wtf docs on CSRF for sending it with the AJAX request
+#Add an option to view the files in the index in the home page (after login that is)
+#Add an option to change file names before uploading
+#Add personal instant file sharing with WebRTC
 #Make it to see only your hostel stuff and friends
 #Add search
 #See how big the files can go
-#Add personal instant file sharing with WebRTC
+
 
 
 #Creating the flask app and pointing to the config
@@ -36,11 +42,11 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 
 from models import *
-
+'''
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
-
+'''
 @app.route('/', methods=['GET', 'POST'])
 @login_required
 def home():
@@ -76,7 +82,7 @@ def login():
 	if request.method == 'POST': 
 		if form.validate_on_submit():
 			user = User.query.filter_by(username=request.form['username']).first()
-			if user is not None:
+			if user is not None and bcrypt.check_password_hash( user.password, request.form['password'] ):
 				#session['logged_in'] = True
 				result = login_user(user)
 				print result
