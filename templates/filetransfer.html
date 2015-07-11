@@ -1,0 +1,37 @@
+{% block head %}
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js">
+	</script>
+	<script type='text/javascript'>
+		//sets the global variable to the prefix to the root of the application
+		$SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+	</script>
+
+<title>File Transfer</title>
+{% endblock head %}
+{% block content %}
+
+<h5>
+ 	<span>Room URL: </span><span id="url">...</span>
+</h5>
+
+<div id="textzone">
+	<textarea id="sendText" disabled placeholder="Press Start, enter some text and then press Send."></textarea>
+	<textarea id="receiveText" disabled></textarea>
+</div>
+<div id="buttons">
+	<button id="startButton">Start</button>
+	<button id="sendButton">Send</button>
+	<button id="closeButton">CloseConnection</button>
+</div>
+
+<!--
+<form action="" method="POST" enctype="multipart/form-data" id="fileform">
+	<input type="file" name="files[]">
+	<input type="submit">
+</form>
+-->
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
+<script src="static/filetransfer.js" type="text/javascript">
+</script>
+<script src="static/lib/adapter.js"></script>
+{% endblock content %}

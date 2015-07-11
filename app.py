@@ -3,6 +3,7 @@ from flask import Flask, render_template, url_for, request, session, redirect, f
 from werkzeug import secure_filename
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.bcrypt import Bcrypt
+from flask.ext.socketio import SocketIO, emit 
 from flask.ext.login import LoginManager, login_user, login_required, logout_user
 #from flask.ext.uploads import save, Upload, delete
 import os
@@ -23,8 +24,7 @@ from forms import LoginForm, RegisterForm
 #Add personal instant file sharing with WebRTC
 #Make it to see only your hostel stuff and friends
 #Add search
-#See how big the files can go
-
+#See how big the files can go - 100GB At once possible to be read by browser, not just make javascript break up the file while sending
 
 
 #Creating the flask app and pointing to the config
@@ -37,16 +37,15 @@ db = SQLAlchemy(app)
 #create brypt object
 bcrypt = Bcrypt(app)
 
+#Create socketio server instance
+socketio = SocketIO(app)
+
 #create instance of Login Manager
 login_manager = LoginManager()
 login_manager.init_app(app)
 
 from models import *
-'''
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
-'''
+
 @app.route('/', methods=['GET', 'POST'])
 @login_required
 def home():
@@ -115,7 +114,26 @@ def logout():
 	flash('You have been logged out')
 	return redirect(url_for('login'))
 
+@app.route('/filetransfer')
+def filetransfer():
+	return render_template('filetransfer.html')
+
+clients = []
+
+@socketio.on('got connected')
+def handle_got_connected(message):
+	print message
+	print('Received json: ' + str(message))
+	clients.append(message)
+
+@socketio.on('create or join')
+def create_or_join(room):
+	print 'Received request to create or join room' + room
+
+	numClients = len(clients)
+	print numClients
+
 
 #start the server with the run method
 if __name__ == '__main__':
-	app.run()
+	socketio.run(app)

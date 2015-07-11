@@ -1,3 +1,4 @@
 /venv
 *.pyc
 config.py
+/static/lib/adapter.js
