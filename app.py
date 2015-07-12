@@ -3,7 +3,7 @@ from flask import Flask, render_template, url_for, request, session, redirect, f
 from werkzeug import secure_filename
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.bcrypt import Bcrypt
-from flask.ext.socketio import SocketIO, emit 
+from flask.ext.socketio import SocketIO, emit, join_room, leave_room
 from flask.ext.login import LoginManager, login_user, login_required, logout_user
 #from flask.ext.uploads import save, Upload, delete
 import os
@@ -12,19 +12,20 @@ from forms import LoginForm, RegisterForm
 
 
 #TODO
+#Check why stuff is happening out of order
 #Build on Homepage a way to upload the file details and display -Done
 #Now, save to postgres database - Done
 #Make login possible - Done
 #Make it check passwords on line 81 - Done
 #Allow folder upload in Chrome (USER FRIENDLINESS IS KING) - Done
-#Find limits of folder upload
+#Find limits of folder upload 
 #Read the flask-wtf docs on CSRF for sending it with the AJAX request
 #Add an option to view the files in the index in the home page (after login that is)
 #Add an option to change file names before uploading
 #Add personal instant file sharing with WebRTC
 #Make it to see only your hostel stuff and friends
 #Add search
-#See how big the files can go - 100GB At once possible to be read by browser, not just make javascript break up the file while sending
+#See how big the files can go - Done, 100GB At once possible to be read by browser, not just make javascript break up the file while sending
 
 
 #Creating the flask app and pointing to the config
@@ -120,19 +121,44 @@ def filetransfer():
 
 clients = []
 
+def logger(text):
+	array = ['Message from server: ']
+	array.append(text)
+	emit('logger', array)
+
 @socketio.on('got connected')
-def handle_got_connected(message):
-	print message
-	print('Received json: ' + str(message))
-	clients.append(message)
+def handle_got_connected():
+	print request.namespace.socket.sessid
+	print('Received id: ' + str(request.namespace.socket.sessid))
+	clients.append(request.namespace.socket.sessid)
 
 @socketio.on('create or join')
 def create_or_join(room):
-	print 'Received request to create or join room' + room
+	print 'Received request from clientid' + request.namespace.socket.sessid + ' to create or join room ' + room
 
 	numClients = len(clients)
 	print numClients
+	if numClients <= 1:
+		join_room(room)
+		logger('Client ID ' + request.namespace.socket.sessid + ' created room ' + str(room))
+		print 'Client ID ' + request.namespace.socket.sessid + ' created room ' + room
+		emit('created', room, request.namespace.socket.sessid)
+	elif numClients == 2:
+		logger('Client ID ' + request.namespace.socket.sessid + ' joined room ' + str(room))
+		print 'Client ID ' + request.namespace.socket.sessid + ' joined room ' + room
+		join_room(room)
+		emit('joined', room, request.namespace.socket.sessid)
+		socketio.emit('ready') #This sends it to all the clients FROM the server since the socketio
+	else:#Max 2 clients
+		print "Room is full"
+		socketio.emit('full', room)
 
+@socketio.on('disconnect')
+def on_disconnect():
+	print 'Client id '+ request.namespace.socket.sessid +' disconnected'
+	if request.namespace.socket.sessid in clients:
+		print 'Removing'
+		clients.remove(request.namespace.socket.sessid)
 
 #start the server with the run method
 if __name__ == '__main__':

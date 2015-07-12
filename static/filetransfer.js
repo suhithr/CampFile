@@ -24,21 +24,25 @@ function readyFunction() {
 	sendButton.disabled = true;
 	closeButton.disabled = true;
 
-	startButton.onclick = createPeerConnection();
+	
 
 	var pC, dataChannel;
 	var isInitiator;
 
 	/* Signalling Server */
 	var namespace = '';
+	var id;
 	var socket = io.connect($SCRIPT_ROOT + namespace);
 
+	//var room = prompt('Enter a room name: ');
 	var room = 'test';
 
-	socket.on('connect', function() {
+	//This seems to be called only after the 'create and join' emit is called
+	/*socket.on('connect', function() {
 		console.log(this.socket.sessionid)
-		socket.emit('got connected', this.socket.sessionid);
-	});
+		socket.emit('got connected');
+	}); */
+
 
 	socket.on('ipaddr', function(ipaddr) {
 		console.log('Server IP address is: ' + ipaddr);
@@ -53,21 +57,24 @@ function readyFunction() {
 
 	socket.on('joined', function(room, clientId) {
 		console.log('Joined a room : ' + room + ' - my client id is: ' + clientId);
-		inInitiator = false;
+		isInitiator = false;
 		allowTextEntry();
 	});
 
 	socket.on('full', function(room) {
 		console.log('Room : ' + room + 'is full. A new room will be created for you.');
-		window.location.hash = '';
-		window.location.reload();
+		//window.location.hash = '';
+		//window.location.reload();
+		//For now when the room is full let it disconnect and redirect to the home page
+		socket.emit('disconnect');
 	});
-
-	socket.on('ready', function() {
+/*
+	socket.on('nowready', function() {
 		createPeerConnection(isInitiator, configuration);
 	});
+	*/
 
-	socket.on('log', function(array) {
+	socket.on('logger', function(array) {
 		console.log.apply(console, array);
 	});
 
@@ -76,7 +83,15 @@ function readyFunction() {
 		signallingMessageCallback(message);
 	});
 
+	socket.on('disconnect', function() {
+		socket.emit('disconnect');
+	});
+
+	socket.emit('got connected');
+
 	socket.emit('create or join', room);
+
+	startButton.onclick = createPeerConnection(isInitiator, configuration);
 
 	if(location.hostname.match(/localhost|127\.0\.0/)) {
 		socket.emit('ipaddr');
@@ -127,7 +142,7 @@ function readyFunction() {
 	}
 
 	function createPeerConnection(isInitiator, configuration) {
-		console.log('Creating peer connection, initiator' + isInitiator + ' config: ' + configuration);
+		console.log('Creating peer connection, initiator ' + isInitiator + ' config: ' + configuration);
 		pC = new RTCPeerConnection(configuration);
 
 		// send any ice candidate to the other peer
