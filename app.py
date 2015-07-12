@@ -115,6 +115,7 @@ def logout():
 	flash('You have been logged out')
 	return redirect(url_for('login'))
 
+
 @app.route('/filetransfer')
 def filetransfer():
 	return render_template('filetransfer.html')
@@ -148,17 +149,19 @@ def create_or_join(room):
 		print 'Client ID ' + request.namespace.socket.sessid + ' joined room ' + room
 		join_room(room)
 		emit('joined', room, request.namespace.socket.sessid)
-		socketio.emit('ready') #This sends it to all the clients FROM the server since the socketio
+		socketio.emit('nowready') #This sends it to all the clients FROM the server since the socketio
 	else:#Max 2 clients
 		print "Room is full"
-		socketio.emit('full', room)
+		emit('full', room)
 
 @socketio.on('disconnect')
 def on_disconnect():
 	print 'Client id '+ request.namespace.socket.sessid +' disconnected'
 	if request.namespace.socket.sessid in clients:
-		print 'Removing'
+		print 'Removed'
 		clients.remove(request.namespace.socket.sessid)
+
+
 
 #start the server with the run method
 if __name__ == '__main__':

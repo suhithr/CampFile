@@ -9,7 +9,7 @@ function readyFunction() {
 	/* Initial Setup */
 	var configuration = {
 		'iceServers': [{
-			'url': 'stun:stun.l.google.com:19302'
+			'urls': 'stun:stun.l.google.com:19302'
 		}]
 	};
 	var roomURL = document.getElementById('url');
@@ -20,7 +20,7 @@ function readyFunction() {
 	var sendButton = document.getElementById('sendButton');
 	var closeButton = document.getElementById('closeButton');
 
-	startButton.disabled = false;
+	startButton.disabled = true;
 	sendButton.disabled = true;
 	closeButton.disabled = true;
 
@@ -34,8 +34,12 @@ function readyFunction() {
 	var id;
 	var socket = io.connect($SCRIPT_ROOT + namespace);
 
-	//var room = prompt('Enter a room name: ');
+	//Only create a room if it's not already there in the URL
+	//var room = window.location.hash.substring(1);
 	var room = 'test';
+	if(!room) {
+		room = window.location.hash = randomToken();
+	}
 
 	//This seems to be called only after the 'create and join' emit is called
 	/*socket.on('connect', function() {
@@ -61,18 +65,20 @@ function readyFunction() {
 		allowTextEntry();
 	});
 
-	socket.on('full', function(room) {
-		console.log('Room : ' + room + 'is full. A new room will be created for you.');
+	socket.on('full', function(room, clientId) {
+		//The idea is to create a new room for them
+		console.log('Room : ' + room + ' is full. A new room will be created for you.');
 		//window.location.hash = '';
 		//window.location.reload();
 		//For now when the room is full let it disconnect and redirect to the home page
-		socket.emit('disconnect');
+		//socket.emit('fullsodisconnect', clientId);
 	});
-/*
+
 	socket.on('nowready', function() {
+		startButton.disabled = false;
 		createPeerConnection(isInitiator, configuration);
 	});
-	*/
+
 
 	socket.on('logger', function(array) {
 		console.log.apply(console, array);
@@ -177,6 +183,14 @@ function readyFunction() {
 				onDataChannelCreated(dataChannel);
 			};
 		}
+	}
+
+	function onLocalSessionCreated(descrip) {
+		console.log('Local session create: ' + descrip);
+		pC.setLocalDescription(descrip, function() {
+			console.log('Sending the local description: ' + pC.localDescription);
+			sendMessage(pC.localDescription);
+		}, logError);
 	}
 
 	function onDataChannelCreated(dataChannel) {
