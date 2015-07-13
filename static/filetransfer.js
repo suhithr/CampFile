@@ -131,6 +131,8 @@ function readyFunction() {
 		if(message.type === 'offer') {
 			console.log('Got an offer, sending back an answer');
 			pC.setRemoteDescription(new RTCSessionDescription(message), function() {}, logError);
+			pC.createAnswer(onLocalSessionCreated, logError);
+			
 		}
 		else if(message.type === 'answer') {
 			console.log('Got an answer');

@@ -149,10 +149,15 @@ def create_or_join(room):
 		print 'Client ID ' + request.namespace.socket.sessid + ' joined room ' + room
 		join_room(room)
 		emit('joined', room, request.namespace.socket.sessid)
-		socketio.emit('nowready') #This sends it to all the clients FROM the server since the socketio
+		emit('nowready', room=room) #This sends it to all the clients FROM the server since the socketio
 	else:#Max 2 clients
 		print "Room is full"
 		emit('full', room)
+
+@socketio.on('message')
+def message(message):
+	logger('Client said: ' + str(message))
+	emit('message', message, broadcast=True)
 
 @socketio.on('disconnect')
 def on_disconnect():
