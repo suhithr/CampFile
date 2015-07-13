@@ -12,7 +12,8 @@ from forms import LoginForm, RegisterForm
 
 
 #TODO
-#Check why stuff is happening out of order
+#
+#Check why stuff is happening out of order - Done, cuz it's working
 #Build on Homepage a way to upload the file details and display -Done
 #Now, save to postgres database - Done
 #Make login possible - Done

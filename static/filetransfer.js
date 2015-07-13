@@ -1,4 +1,4 @@
-'use strict'
+//'use strict'
 $(document).ready(readyFunction);
 
 function readyFunction() {
@@ -23,10 +23,13 @@ function readyFunction() {
 	startButton.disabled = true;
 	sendButton.disabled = true;
 	closeButton.disabled = true;
-
+	sendTextArea.disabled = true;
+	sendTextArea.placeholder = 'Once the datachannel is ready you can enter text';
+	sendButton.addEventListener('click', sendData);
 	
 
-	var pC, dataChannel;
+	var pC = null;
+	var dataChannel = null;
 	var isInitiator;
 
 	/* Signalling Server */
@@ -97,7 +100,7 @@ function readyFunction() {
 
 	socket.emit('create or join', room);
 
-	startButton.onclick = createPeerConnection(isInitiator, configuration);
+	
 
 	if(location.hostname.match(/localhost|127\.0\.0/)) {
 		socket.emit('ipaddr');
@@ -132,7 +135,7 @@ function readyFunction() {
 			console.log('Got an offer, sending back an answer');
 			pC.setRemoteDescription(new RTCSessionDescription(message), function() {}, logError);
 			pC.createAnswer(onLocalSessionCreated, logError);
-			
+
 		}
 		else if(message.type === 'answer') {
 			console.log('Got an answer');
@@ -172,7 +175,7 @@ function readyFunction() {
 		// if it's the initiator it needs to create the data channel
 		if(isInitiator) {
 			console.log('Creating the data channel');
-			dataChannel = pC.createDataChannel('text');
+			dataChannel = pC.createDataChannel('text', {reliable: false});
 			onDataChannelCreated(dataChannel);
 
 			console.log('Now creating an offer');
@@ -200,6 +203,7 @@ function readyFunction() {
 
 		dataChannel.onopen = function() {
 			console.log('The data channel : '+ dataChannel + ' is OPEN');
+			sendButton.disabled = false;
 		};
 
 		dataChannel.onmessage = handleMessage;
@@ -219,5 +223,11 @@ function readyFunction() {
 
 	function logError(error) {
 		console.log(error.toString(), error);
+	}
+
+	/* Data Sending and UI */
+	function sendData() {
+		dataChannel.send(sendTextArea.value);
+		console.log('Sending data : ' + sendTextArea.value);
 	}
 }
