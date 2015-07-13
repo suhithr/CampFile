@@ -1,31 +1,51 @@
 //'use strict'
 $(document).ready(readyFunction);
-
+/*
+* Make text sharing work - Done
+* Make it close the connection properly - Done
+* Sort out room assignment, when the rooms are full
+* Make it share files
+*Fix Browser Interoperability Issues
+*Integrate with the Download Index
+*/
 function readyFunction() {
 	/*document.querySelector('input[type=file]').onchange = function() {
 		var file = this.files[0];
 	};*/
 
 	/* Initial Setup */
-	var configuration = {
+	var iceServers = {
 		'iceServers': [{
 			'urls': 'stun:stun.l.google.com:19302'
-		}]
-	};
-	var roomURL = document.getElementById('url');
-	var sendTextArea = document.getElementById('sendText');
-	var receiveTextArea = document.getElementById('receiveText');
+		}],
 
-	var startButton = document.getElementById('startButton');
+	};
+
+	var options = {
+		optional: [
+			{DtlsSrtpKeyAgreement: true}, //For Chrome to work with Firefox
+			{RtpDataChannels: true} //For DataChannels to work on Firefox
+		]
+	}
+;
+	var roomURL = document.getElementById('url');
+	var fileInput = document.getElementById('file');
+	var downloadLink = document.getElementById('dllink');
+	//var sendTextArea = document.getElementById('sendText');
+	//var receiveTextArea = document.getElementById('receiveText');
+
+//	var restartButton = document.getElementById('restartButton');
 	var sendButton = document.getElementById('sendButton');
 	var closeButton = document.getElementById('closeButton');
 
-	startButton.disabled = true;
+//	restartButton.disabled = true;
 	sendButton.disabled = true;
 	closeButton.disabled = true;
-	sendTextArea.disabled = true;
-	sendTextArea.placeholder = 'Once the datachannel is ready you can enter text';
+	//sendTextArea.disabled = true;
+	//sendTextArea.placeholder = 'Once the datachannel is ready you can enter text';
+//	restartButton.addEventListener('click', restartConnection);
 	sendButton.addEventListener('click', sendData);
+	closeButton.addEventListener('click', closeChannels);
 	
 
 	var pC = null;
@@ -78,8 +98,8 @@ function readyFunction() {
 	});
 
 	socket.on('nowready', function() {
-		startButton.disabled = false;
-		createPeerConnection(isInitiator, configuration);
+		//restartButton.disabled = false;
+		createPeerConnection(isInitiator, iceServers, options);
 	});
 
 
@@ -133,8 +153,9 @@ function readyFunction() {
 	function signallingMessageCallback(message) {
 		if(message.type === 'offer') {
 			console.log('Got an offer, sending back an answer');
-			pC.setRemoteDescription(new RTCSessionDescription(message), function() {}, logError);
-			pC.createAnswer(onLocalSessionCreated, logError);
+			pC.setRemoteDescription(new RTCSessionDescription(message), function() {
+				pC.createAnswer(onLocalSessionCreated, logError);
+			}, logError);
 
 		}
 		else if(message.type === 'answer') {
@@ -152,9 +173,11 @@ function readyFunction() {
 		}
 	}
 
-	function createPeerConnection(isInitiator, configuration) {
-		console.log('Creating peer connection, initiator ' + isInitiator + ' config: ' + configuration);
-		pC = new RTCPeerConnection(configuration);
+	function createPeerConnection(isInitiator, iceServers, options) {
+		console.log('Creating peer connection, initiator ' + isInitiator + ' Ice Servers: ' + iceServers);
+		pC = new RTCPeerConnection(iceServers, options);
+
+		pC.oniceconnectionstatechange = handleICEConnectionStateChange;
 
 		// send any ice candidate to the other peer
 		pC.onicecandidate = function(iceevent) {
@@ -204,30 +227,154 @@ function readyFunction() {
 		dataChannel.onopen = function() {
 			console.log('The data channel : '+ dataChannel + ' is OPEN');
 			sendButton.disabled = false;
+			closeButton.disabled = false;
+			//restartButton.disabled = false;
 		};
 
-		dataChannel.onmessage = handleMessage;
+		dataChannel.onmessage = (webrtcDetectedBrowser === 'firefox') ?
+			receiveDataFirefox() : 
+			receiveDataChrome();
+	}
+
+	function receiveDataFirefox() {
+		var count, total, parts;
+
+		return function onmessage(event) {
+			if (typeof event.data === 'string') {
+				total = parseInt(event.data);
+				parts = [];
+				count = 0;
+				console.log('Expecting a total of ' + total + ' bytes');
+				return;
+			}
+			parts.push(event.data);
+			count += event.data.size;
+			var diff = total - count;
+			console.log('Got ' + event.data.size + ' bytes' + diff + ' to go.');
+
+			if (count === total) {
+				console.log('Assembling the file');
+				var buf = new Uint8ClampedArray(total);
+				var compose = function(i, pos) {
+					var reader = new FileReader();
+					reader.onload = function() {
+						buf.set(new Uint8ClampedArray(this.result), pos);
+						if ( i + 1 === parts.length) {
+							console.log('Done. Rendering photo.');
+							readyForDownload(buf);
+						}
+						else {
+							compose(i + 1, pos + this.result.byteLength);
+						}
+					};
+					reader.readAsArrayBuffer(parts[i]);
+				};
+				compose(0, 0);
+			}
+		};
+	}
+
+	function receiveDataChrome() {
+		var buf;
+		var count;
+		return function onmessage(event) {
+			if(typeof event.data === 'string') {
+				buf = window.buf = new Uint8ClampedArray(parseInt(event.data));
+				count = 0;
+				console.log('Expecting a total of ' + buf.byteLength + ' bytes');
+				return;
+			}
+
+			var data = new Uint8ClampedArray(event.data);
+			buf.set(data, count);
+
+			count += data.byteLength;
+			console.log('Count: ' + count);
+
+			if (count === buf.byteLength) {
+				console.log('Done, file getting ready for download');
+				readyForDownload(buf);
+			}
+		};
 	}
 
 	function handleMessage(event) {
 		console.log('The received message is ' + event.data);
-		receiveTextArea.value = event.data;
+		//receiveTextArea.value = event.data;
 	}
 
 
 	function allowTextEntry() {
 		console.log('Starting to allow Text Entry');
-		sendTextArea.disabled = false;
-		sendTextArea.placeholder = "";
+		//sendTextArea.disabled = false;
+		//sendTextArea.placeholder = "";
+	}
+
+	function handleICEConnectionStateChange() {
+		if(pC.iceConnectionState == 'disconnected') {
+			console.log('The Client Disconnected');
+		}
 	}
 
 	function logError(error) {
 		console.log(error.toString(), error);
 	}
 
-	/* Data Sending and UI */
-	function sendData() {
-		dataChannel.send(sendTextArea.value);
-		console.log('Sending data : ' + sendTextArea.value);
+
+
+	function closeChannels() {
+		console.log('Closing DataChannels');
+		dataChannel.close();
+		closeConnection();
 	}
+/*
+	function restartConnection() {
+		closeChannels();
+		console.log('Restarting the connection');
+		isInitiator = true;
+		createPeerConnection(isInitiator, iceServers, options);
+	}
+*/
+	function closeConnection() {
+		 console.log('Closing the PeerConnection');
+		pC.close();
+	}
+
+	/* Data Sending and UI */
+	function sendData(fileInput) {
+
+		//Split datachannel message into proper sized chunks, getting the number of chunks
+		var chunkLen = 16000;
+		var file = fileInput.files[0];
+		var len = file.data.byteLength;
+		var n = len / chunkLen | 0;
+
+		console.log('Sending a total of ' + len + ' bytes');
+		dataChannel.send(len);
+
+		//Now split the file and send each chunk
+		for(var i = 0; i < n; i++) {
+			var start = i * chunkLen;
+			var end = (i + 1) * chunkLen;
+
+			console.log(start + ' - ' + (end - 1));
+			dataChannel.send(file.data.subarray(start, end));
+		}
+
+		//If there are remainders
+		if( len % chunkLen) {
+			console.log('last ' + len % chunkLen + ' byte(s)');
+			dataChannel.send(file.data.subarray(n * chunkLen));
+		}
+		
+	}
+
+	function readyForDownload(data) {
+		var fileURL = URL.createObjectURL(data);
+		var text = 'Click to download ' + file.name + ' of size ' + file.size + ' bytes';
+		downloadLink.innerHTML = text;
+		downloadLink.href = fileURL;
+	}
+
+
 }
