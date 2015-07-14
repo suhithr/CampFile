@@ -1,4 +1,4 @@
-//'use strict'
+'use strict'
 $(document).ready(readyFunction);
 /*
 * Make text sharing work - Done
@@ -26,13 +26,12 @@ function readyFunction() {
 			{DtlsSrtpKeyAgreement: true}, //For Chrome to work with Firefox
 			{RtpDataChannels: true} //For DataChannels to work on Firefox
 		]
-	}
-;
+	};
+
+	var theFile = null;
 	var roomURL = document.getElementById('url');
 	var fileInput = document.getElementById('file');
 	var downloadLink = document.getElementById('dllink');
-	//var sendTextArea = document.getElementById('sendText');
-	//var receiveTextArea = document.getElementById('receiveText');
 
 //	var restartButton = document.getElementById('restartButton');
 	var sendButton = document.getElementById('sendButton');
@@ -41,12 +40,10 @@ function readyFunction() {
 //	restartButton.disabled = true;
 	sendButton.disabled = true;
 	closeButton.disabled = true;
-	//sendTextArea.disabled = true;
-	//sendTextArea.placeholder = 'Once the datachannel is ready you can enter text';
 //	restartButton.addEventListener('click', restartConnection);
 	sendButton.addEventListener('click', sendData);
 	closeButton.addEventListener('click', closeChannels);
-	
+	fileInput.addEventListener('change', getFile);
 
 	var pC = null;
 	var dataChannel = null;
@@ -198,7 +195,7 @@ function readyFunction() {
 		// if it's the initiator it needs to create the data channel
 		if(isInitiator) {
 			console.log('Creating the data channel');
-			dataChannel = pC.createDataChannel('text', {reliable: false});
+			dataChannel = pC.createDataChannel('fileChannel', {reliable: false});
 			onDataChannelCreated(dataChannel);
 
 			console.log('Now creating an offer');
@@ -224,6 +221,7 @@ function readyFunction() {
 	function onDataChannelCreated(dataChannel) {
 		console.log('onDataChannelCreated : ' + dataChannel);
 
+		dataChannel.binaryType = "arraybuffer";
 		dataChannel.onopen = function() {
 			console.log('The data channel : '+ dataChannel + ' is OPEN');
 			sendButton.disabled = false;
@@ -247,10 +245,11 @@ function readyFunction() {
 				console.log('Expecting a total of ' + total + ' bytes');
 				return;
 			}
-			parts.push(event.data);
-			count += event.data.size;
+			var d = new Blob(event.data);
+			parts.push(d);
+			count += event.data.byteLength;
 			var diff = total - count;
-			console.log('Got ' + event.data.size + ' bytes' + diff + ' to go.');
+			console.log('Got ' + event.data.byteLength + ' bytes' + diff + ' to go.');
 
 			if (count === total) {
 				console.log('Assembling the file');
@@ -260,7 +259,7 @@ function readyFunction() {
 					reader.onload = function() {
 						buf.set(new Uint8ClampedArray(this.result), pos);
 						if ( i + 1 === parts.length) {
-							console.log('Done. Rendering photo.');
+							console.log('Done.');
 							readyForDownload(buf);
 						}
 						else {
@@ -336,37 +335,50 @@ function readyFunction() {
 	}
 */
 	function closeConnection() {
-		 console.log('Closing the PeerConnection');
+		console.log('Closing the PeerConnection');
 		pC.close();
 	}
 
 	/* Data Sending and UI */
-	function sendData(fileInput) {
+	function sendData() {
 
 		//Split datachannel message into proper sized chunks, getting the number of chunks
-		var chunkLen = 16000;
-		var file = fileInput.files[0];
-		var len = file.data.byteLength;
+		var chunkLen = 1200;
+		var filereader = new FileReader();
+		var file = theFile;
+		var len = file.size;
 		var n = len / chunkLen | 0;
+		var blob;
 
-		console.log('Sending a total of ' + len + ' bytes');
+		console.log('Sending ' + len + ' bytes');
 		dataChannel.send(len);
 
-		//Now split the file and send each chunk
+		var reader = new FileReader();
 		for(var i = 0; i < n; i++) {
-			var start = i * chunkLen;
+			var start = i* chunkLen;
 			var end = (i + 1) * chunkLen;
-
-			console.log(start + ' - ' + (end - 1));
-			dataChannel.send(file.data.subarray(start, end));
+			console.log(start + ' to ' + end);
+			if(webrtcDetectedBrowser === 'firefox') {
+				blob = file.slice(start, end);
+			}
+			else {
+				blob = file.substr(start, end);
+			}
+			dataChannel.send(blob);
 		}
 
-		//If there are remainders
-		if( len % chunkLen) {
-			console.log('last ' + len % chunkLen + ' byte(s)');
-			dataChannel.send(file.data.subarray(n * chunkLen));
+		//To send the remainder
+		if (len % chunkLen) {
+			console.log('The remainder part ' + len % chunkLen + ' bytes');
+			if(webrtcDetectedBrowser === 'firefox') {
+				blob = file.slice(n* chunkLen);
+			}
+			else {
+				blob = file.webkitSlice(n* chunkLen);
+			}
+			dataChannel.send(blob);
 		}
-		
+
 	}
 
 	function readyForDownload(data) {
@@ -376,5 +388,10 @@ function readyFunction() {
 		downloadLink.href = fileURL;
 	}
 
+
+	function getFile() {
+		theFile = this.files[0];
+		console.log('File got is: ' + theFile.name + ' with size: ' + theFile.size + ' with type: ' + theFile.type);
+	}
 
 }
