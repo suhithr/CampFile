@@ -4,8 +4,10 @@ $(document).ready(readyFunction);
 * Make text sharing work - Done
 * Make it close the connection properly - Done
 * Sort out room assignment, when the rooms are full
-* Make it share files
-*Fix Browser Interoperability Issues
+* Make it share files - Done
+* Make DataChannels much better
+* Make filesharing work in Chrome
+* Fix Browser Interoperability Issues
 *Integrate with the Download Index
 */
 function readyFunction() {
@@ -23,8 +25,8 @@ function readyFunction() {
 
 	var options = {
 		optional: [
-			{DtlsSrtpKeyAgreement: true}, //For Chrome to work with Firefox
-			{RtpDataChannels: true} //For DataChannels to work on Firefox
+			{DtlsSrtpKeyAgreement: true}//, //For Chrome to work with Firefox
+			//{RtpDataChannels: true} //For DataChannels to work on Firefox
 		]
 	};
 
@@ -33,14 +35,14 @@ function readyFunction() {
 	var fileInput = document.getElementById('file');
 	var downloadLink = document.getElementById('dllink');
 
-//	var restartButton = document.getElementById('restartButton');
+	var restartButton = document.getElementById('restartButton');
 	var sendButton = document.getElementById('sendButton');
 	var closeButton = document.getElementById('closeButton');
 
-//	restartButton.disabled = true;
+	restartButton.disabled = true;
 	sendButton.disabled = true;
 	closeButton.disabled = true;
-//	restartButton.addEventListener('click', restartConnection);
+	restartButton.addEventListener('click', restartConnection);
 	sendButton.addEventListener('click', sendData);
 	closeButton.addEventListener('click', closeChannels);
 	fileInput.addEventListener('change', getFile);
@@ -227,7 +229,7 @@ function readyFunction() {
 			console.log('The data channel : '+ dataChannel + ' is OPEN');
 			sendButton.disabled = false;
 			closeButton.disabled = false;
-			//restartButton.disabled = false;
+			restartButton.disabled = false;
 		};
 
 		dataChannel.onmessage = onReceiveMessage;
@@ -287,14 +289,14 @@ function readyFunction() {
 		dataChannel.close();
 		closeConnection();
 	}
-/*
+
 	function restartConnection() {
 		closeChannels();
 		console.log('Restarting the connection');
-		isInitiator = true;
+		socket.emit('create or join', room);
 		createPeerConnection(isInitiator, iceServers, options);
 	}
-*/
+
 	function closeConnection() {
 		console.log('Closing the PeerConnection');
 		pC.close();
@@ -304,7 +306,7 @@ function readyFunction() {
 	function sendData() {
 
 		//Split datachannel message into proper sized chunks, getting the number of chunks
-		var chunkLen = 16000;
+		var chunkLen = 64000;
 		var file = theFile;
 		var len = file.size;
 		var n = len / chunkLen | 0;
