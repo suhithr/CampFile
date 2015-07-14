@@ -48,6 +48,7 @@ function readyFunction() {
 	var pC = null;
 	var dataChannel = null;
 	var isInitiator;
+	var receiveBuffer, receivedSize, size;
 
 	/* Signalling Server */
 	var namespace = '';
@@ -196,6 +197,7 @@ function readyFunction() {
 		if(isInitiator) {
 			console.log('Creating the data channel');
 			dataChannel = pC.createDataChannel('fileChannel', {reliable: false});
+			dataChannel.binaryType = "arraybuffer";
 			onDataChannelCreated(dataChannel);
 
 			console.log('Now creating an offer');
@@ -221,7 +223,6 @@ function readyFunction() {
 	function onDataChannelCreated(dataChannel) {
 		console.log('onDataChannelCreated : ' + dataChannel);
 
-		dataChannel.binaryType = "arraybuffer";
 		dataChannel.onopen = function() {
 			console.log('The data channel : '+ dataChannel + ' is OPEN');
 			sendButton.disabled = false;
@@ -229,72 +230,32 @@ function readyFunction() {
 			//restartButton.disabled = false;
 		};
 
-		dataChannel.onmessage = (webrtcDetectedBrowser === 'firefox') ?
-			receiveDataFirefox() : 
-			receiveDataChrome();
+		dataChannel.onmessage = onReceiveMessage;
 	}
 
-	function receiveDataFirefox() {
-		var count, total, parts;
+	function onReceiveMessage(event) {
 
-		return function onmessage(event) {
-			if (typeof event.data === 'string') {
-				total = parseInt(event.data);
-				parts = [];
-				count = 0;
-				console.log('Expecting a total of ' + total + ' bytes');
-				return;
-			}
-			var d = new Blob(event.data);
-			parts.push(d);
-			count += event.data.byteLength;
-			var diff = total - count;
-			console.log('Got ' + event.data.byteLength + ' bytes' + diff + ' to go.');
 
-			if (count === total) {
-				console.log('Assembling the file');
-				var buf = new Uint8ClampedArray(total);
-				var compose = function(i, pos) {
-					var reader = new FileReader();
-					reader.onload = function() {
-						buf.set(new Uint8ClampedArray(this.result), pos);
-						if ( i + 1 === parts.length) {
-							console.log('Done.');
-							readyForDownload(buf);
-						}
-						else {
-							compose(i + 1, pos + this.result.byteLength);
-						}
-					};
-					reader.readAsArrayBuffer(parts[i]);
-				};
-				compose(0, 0);
-			}
-		};
-	}
+		if(typeof event.data === 'string') {
+			size = parseInt(event.data);
+			receiveBuffer = [];
+			receivedSize = 0;
+			console.log('Expecting a total of ' + size + ' bytes');
+			return;
+		}
+		console.log('Received message ' + event.data.byteLength);
+		receiveBuffer.push(event.data);
+		receivedSize += parseInt(event.data.byteLength);
+		console.log('Received message ' + receivedSize + ' so far');
 
-	function receiveDataChrome() {
-		var buf;
-		var count;
-		return function onmessage(event) {
-			if(typeof event.data === 'string') {
-				buf = window.buf = new Uint8ClampedArray(parseInt(event.data));
-				count = 0;
-				console.log('Expecting a total of ' + buf.byteLength + ' bytes');
-				return;
-			}
 
-			var data = new Uint8ClampedArray(event.data);
-			buf.set(data, count);
-
-			count += data.byteLength;
-			console.log('Count: ' + count);
-
-			if (count === buf.byteLength) {
-				console.log('Done, file getting ready for download');
-				readyForDownload(buf);
-			}
-		};
+		console.log(typeof(receivedSize) + ' and ' + typeof(size));
+		if(receivedSize === size) {
+			console.log('Everything has been received');
+			var received = new window.Blob(receiveBuffer);
+			receiveBuffer = [];
+			readyForDownload(received);
+		}
 	}
 
 	function handleMessage(event) {
@@ -343,47 +304,37 @@ function readyFunction() {
 	function sendData() {
 
 		//Split datachannel message into proper sized chunks, getting the number of chunks
-		var chunkLen = 1200;
-		var filereader = new FileReader();
+		var chunkLen = 16000;
 		var file = theFile;
 		var len = file.size;
 		var n = len / chunkLen | 0;
 		var blob;
 
-		console.log('Sending ' + len + ' bytes');
+		//Inform the file size to the recepient
+		console.log('The filesize is ' + len + ' bytes');
 		dataChannel.send(len);
 
-		var reader = new FileReader();
-		for(var i = 0; i < n; i++) {
-			var start = i* chunkLen;
-			var end = (i + 1) * chunkLen;
-			console.log(start + ' to ' + end);
-			if(webrtcDetectedBrowser === 'firefox') {
-				blob = file.slice(start, end);
-			}
-			else {
-				blob = file.substr(start, end);
-			}
-			dataChannel.send(blob);
-		}
+		var sliceFile = function(offset) {
+			var reader = new FileReader();
+			reader.onload = (function() {
+				return function(e) {
+					dataChannel.send(e.target.result);
+					if( len > offset + e.target.result.byteLength) {
+						window.setTimeout(sliceFile, 0, offset + chunkLen);
+					}
 
-		//To send the remainder
-		if (len % chunkLen) {
-			console.log('The remainder part ' + len % chunkLen + ' bytes');
-			if(webrtcDetectedBrowser === 'firefox') {
-				blob = file.slice(n* chunkLen);
-			}
-			else {
-				blob = file.webkitSlice(n* chunkLen);
-			}
-			dataChannel.send(blob);
-		}
-
+				};
+			})(file);
+			var slice = file.slice(offset, offset + chunkLen);
+			reader.readAsArrayBuffer(slice)
+		};
+		sliceFile(0);
 	}
+
 
 	function readyForDownload(data) {
 		var fileURL = URL.createObjectURL(data);
-		var text = 'Click to download ' + file.name + ' of size ' + file.size + ' bytes';
+		var text = 'Click to download ' + data.name + ' of size ' + file.size + ' bytes';
 		downloadLink.innerHTML = text;
 		downloadLink.href = fileURL;
 	}
