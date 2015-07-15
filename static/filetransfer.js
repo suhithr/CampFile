@@ -5,9 +5,10 @@ $(document).ready(readyFunction);
 * Make it close the connection properly - Done
 * Sort out room assignment, when the rooms are full
 * Make it share files - Done
-* Make DataChannels much better
-* Make filesharing work in Chrome
-* Fix Browser Interoperability Issues
+* Make DataChannels much faster
+* Make filesharing work in Chrome - Done
+* Fix Browser Interoperability Issues - Done Note: Large files >50MB don't work from CHROME -> Firefox
+* Fix issue with restarting
 *Integrate with the Download Index
 */
 function readyFunction() {
@@ -30,6 +31,10 @@ function readyFunction() {
 		]
 	};
 
+	var sdpOptions = {
+		offerToReceiveAudio: false,
+		offerToReceiveVideo: false
+	};
 	var theFile = null;
 	var roomURL = document.getElementById('url');
 	var fileInput = document.getElementById('file');
@@ -46,7 +51,9 @@ function readyFunction() {
 	sendButton.addEventListener('click', sendData);
 	closeButton.addEventListener('click', closeChannels);
 	fileInput.addEventListener('change', getFile);
+	window.addEventListener("unload", handleUnload);
 
+	var restart = false;
 	var pC = null;
 	var dataChannel = null;
 	var isInitiator;
@@ -79,13 +86,14 @@ function readyFunction() {
 	socket.on('created', function(room, clientId) {
 		console.log('Created a room: ' + room + ' - my client id is: ' + clientId);
 		isInitiator = true;
-		allowTextEntry();
 	});
 
 	socket.on('joined', function(room, clientId) {
 		console.log('Joined a room : ' + room + ' - my client id is: ' + clientId);
 		isInitiator = false;
-		allowTextEntry();
+		if(restart === true ) {
+			isInitiator = true;
+		}
 	});
 
 	socket.on('full', function(room, clientId) {
@@ -112,8 +120,8 @@ function readyFunction() {
 		signallingMessageCallback(message);
 	});
 
-	socket.on('disconnect', function() {
-		socket.emit('disconnect');
+	socket.on('disconnect', function(room) {
+		socket.emit('on_disconnect', room);
 	});
 
 	socket.emit('got connected');
@@ -195,6 +203,7 @@ function readyFunction() {
 			}
 		};
 
+		
 		// if it's the initiator it needs to create the data channel
 		if(isInitiator) {
 			console.log('Creating the data channel');
@@ -203,7 +212,7 @@ function readyFunction() {
 			onDataChannelCreated(dataChannel);
 
 			console.log('Now creating an offer');
-			pC.createOffer(onLocalSessionCreated, logError);
+			pC.createOffer(onLocalSessionCreated, logError, sdpOptions);
 		}
 		else {
 			pC.ondatachannel = function(event) {
@@ -266,12 +275,6 @@ function readyFunction() {
 	}
 
 
-	function allowTextEntry() {
-		console.log('Starting to allow Text Entry');
-		//sendTextArea.disabled = false;
-		//sendTextArea.placeholder = "";
-	}
-
 	function handleICEConnectionStateChange() {
 		if(pC.iceConnectionState == 'disconnected') {
 			console.log('The Client Disconnected');
@@ -291,10 +294,13 @@ function readyFunction() {
 	}
 
 	function restartConnection() {
-		closeChannels();
+		restart = true;
+		handleUnload();
 		console.log('Restarting the connection');
 		socket.emit('create or join', room);
+		//isInitiator = true;
 		createPeerConnection(isInitiator, iceServers, options);
+
 	}
 
 	function closeConnection() {
@@ -306,7 +312,13 @@ function readyFunction() {
 	function sendData() {
 
 		//Split datachannel message into proper sized chunks, getting the number of chunks
-		var chunkLen = 64000;
+		var chunkLen;
+		if(webrtcDetectedBrowser === 'firefox') {
+			chunkLen = 100000;
+		}
+		else { //Assuming it's chrome
+			chunkLen = 64000;
+		}	
 		var file = theFile;
 		var len = file.size;
 		var n = len / chunkLen | 0;
@@ -320,7 +332,15 @@ function readyFunction() {
 			var reader = new FileReader();
 			reader.onload = (function() {
 				return function(e) {
-					dataChannel.send(e.target.result);
+					console.log('Buffered amount ' + dataChannel.bufferedAmount);
+					if(dataChannel.bufferedAmount > 16000000 || dataChannel.readyState != 'open') {
+						window.setTimeout(function() {
+							dataChannel.send(e.target.result);
+						}, 500);
+					}
+					else {
+						dataChannel.send(e.target.result);
+					}
 					if( len > offset + e.target.result.byteLength) {
 						window.setTimeout(sliceFile, 0, offset + chunkLen);
 					}
@@ -345,6 +365,15 @@ function readyFunction() {
 	function getFile() {
 		theFile = this.files[0];
 		console.log('File got is: ' + theFile.name + ' with size: ' + theFile.size + ' with type: ' + theFile.type);
+	}
+
+	function handleUnload() {
+		console.log('Leaving the room');
+		socket.emit('leave', room);
+		console.log('Closing Data Channel');
+		dataChannel.close();
+		console.log('Closing peer connection');
+		pC.close();
 	}
 
 }

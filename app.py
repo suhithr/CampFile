@@ -3,7 +3,7 @@ from flask import Flask, render_template, url_for, request, session, redirect, f
 from werkzeug import secure_filename
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.bcrypt import Bcrypt
-from flask.ext.socketio import SocketIO, emit, join_room, leave_room
+from flask.ext.socketio import SocketIO, emit, send, join_room, leave_room
 from flask.ext.login import LoginManager, login_user, login_required, logout_user
 #from flask.ext.uploads import save, Upload, delete
 import os
@@ -120,7 +120,7 @@ def logout():
 def filetransfer():
 	return render_template('filetransfer.html')
 
-clients = []
+clients = {}
 
 def logger(text):
 	array = ['Message from server: ']
@@ -131,23 +131,28 @@ def logger(text):
 def handle_got_connected():
 	print request.namespace.socket.sessid
 	print('Received id: ' + str(request.namespace.socket.sessid))
-	clients.append(request.namespace.socket.sessid)
 
 @socketio.on('create or join')
 def create_or_join(room):
 	print 'Received request from clientid' + request.namespace.socket.sessid + ' to create or join room ' + room
+	if str(room) in clients:
+		clients[str(room)].append(request.namespace.socket.sessid)
+		print 'Dictionary being updated'
+	else:
+		clients.update({ str(room): [request.namespace.socket.sessid]})
+		print 'Dictionary entry being created'
 
-	numClients = len(clients)
+	numClients = len(clients[str(room)])
 	print numClients
 	if numClients <= 1:
-		join_room(room)
+		join_room(str(room))
 		logger('Client ID ' + request.namespace.socket.sessid + ' created room ' + str(room))
 		print 'Client ID ' + request.namespace.socket.sessid + ' created room ' + room
 		emit('created', room, request.namespace.socket.sessid)
 	elif numClients == 2:
 		logger('Client ID ' + request.namespace.socket.sessid + ' joined room ' + str(room))
 		print 'Client ID ' + request.namespace.socket.sessid + ' joined room ' + room
-		join_room(room)
+		join_room(str(room))
 		emit('joined', room, request.namespace.socket.sessid)
 		emit('nowready', room=room) #This sends it to all the clients FROM the server since the socketio
 	else:#Max 2 clients
@@ -159,13 +164,22 @@ def message(message):
 	logger('Client said: ' + str(message))
 	emit('message', message, broadcast=True)
 
-@socketio.on('disconnect')
-def on_disconnect():
+@socketio.on('on_disconnect')
+def on_disconnect(room):
 	print 'Client id '+ request.namespace.socket.sessid +' disconnected'
-	if request.namespace.socket.sessid in clients:
-		print 'Removed'
-		clients.remove(request.namespace.socket.sessid)
+	if str(room) in clients:
+		if request.namespace.socket.sessid in clients[str(room)] is not None:
+			print 'Removed'
+			clients[room].remove(request.namespace.socket.sessid)
 
+@socketio.on('leave')
+def on_leave(room):
+	if str(room) in clients:
+		if request.namespace.socket.sessid in clients[str(room)]:
+			logger('Client id ' + request.namespace.socket.sessid + ' has left the room ' + room)
+			print 'Client id ' + request.namespace.socket.sessid + ' has left the room ' + room
+			leave_room(str(room))
+			clients[str(room)].remove(request.namespace.socket.sessid)
 
 
 #start the server with the run method
