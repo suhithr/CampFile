@@ -1,9 +1,8 @@
-<!doctype html>
-<html>
-<head>
-	<title>LoginPage</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% block head %}
+	<title>Login - CampFile</title>
+{% endblock head %}
+{% block content %}
 	<h3>Please Login</h3>
 	<br> 
 	<form action="" method="post">
@@ -31,14 +30,4 @@
 		</p>
 		<button type="submit">Sign IN </button>
 	</form>
-	{% with messages = get_flashed_messages() %}
-		{% if messages %}
-		<ul class="flashes">
-			{% for message in messages %}
-				<li>{{ messages }}</li>
-			{% endfor %}
-		</ul>
-		{% endif %}
-	{% endwith %}
-</body>
-</html>
+{% endblock content %}

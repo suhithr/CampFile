@@ -1,7 +1,9 @@
-from app import db, bcrypt
+from app import db, bcrypt, app
+import flask.ext.whooshalchemy as whooshalchemy
 
 class filestable(db.Model):
 	__tablename__ = 'filestable3'
+	__searchable__ = ['name']
 
 	id = db.Column(db.Integer, primary_key=True)
 	name = db.Column(db.String, nullable=False)
@@ -18,6 +20,8 @@ class filestable(db.Model):
 
 	def __repr__(self):
 		return "<Filename is '%s'" % (self.name)
+
+	whooshalchemy.whoosh_index(app, name)
 
 class User(db.Model):
 	__tablename__ = 'user1'

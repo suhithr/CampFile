@@ -8,7 +8,7 @@ from flask.ext.login import LoginManager, login_user, login_required, logout_use
 #from flask.ext.uploads import save, Upload, delete
 import os
 import json
-from forms import LoginForm, RegisterForm
+from forms import LoginForm, RegisterForm, SearchForm
 
 
 #TODO
@@ -18,14 +18,20 @@ from forms import LoginForm, RegisterForm
 #Make login possible - Done
 #Make it check passwords on line 81 - Done
 #Allow folder upload in Chrome (USER FRIENDLINESS IS KING) - Done
-#Find limits of folder upload 
-#Read the flask-wtf docs on CSRF for sending it with the AJAX request
-#Add an option to view the files in the index in the home page (after login that is)
-#Add an option to change file names before uploading
-#Add personal instant file sharing with WebRTC
-#Make it to see only your hostel stuff and friends
-#Add search
+#Find limits of folder upload - Done, depends mostly on number of files
+#Read the flask-wtf docs on CSRF for sending it with the AJAX request - Done
+#Add personal instant file sharing with WebRTC - Done
 #See how big the files can go - Done, 100GB At once possible to be read by browser, not just make javascript break up the file while sending
+
+#Add an option to view the files of others in the index in the home page (after login that is)
+#
+#->>>Add an option to change file names before uploading
+#Make it to see only your hostel stuff and friends
+
+#Add search (Send the query onchange with ajax and generate 
+#a list of fuzzy candidates, send the list via ajax.... Then
+#with clever css display it) - Gotta do the display and test the searching!@
+
 
 
 #Creating the flask app and pointing to the config
@@ -115,6 +121,22 @@ def logout():
 	flash('You have been logged out')
 	return redirect(url_for('login'))
 
+@app.route('/search')
+def search():
+	form = SearchForm()
+	return render_template('search.html', form=form)
+
+@app.route('/results')
+def results():
+	if request.method == 'POST':
+		query = request.json["query"]
+		results = filestable.query.whoosh_search(query, 50).all()
+		print results
+		fuzzyResults = process.extract(query, results, limit=10)
+		print fuzzyResults
+		return jsonify(result = fuzzyResults)
+
+
 
 @app.route('/filetransfer')
 def filetransfer():
@@ -184,4 +206,4 @@ def on_leave(room):
 
 #start the server with the run method
 if __name__ == '__main__':
-	socketio.run(app)
+	socketio.run(app,port=5000)

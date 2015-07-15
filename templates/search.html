@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block head %}
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js">
+	</script>
+	<script type='text/javascript'>
+		//sets the global variable to the prefix to the root of the application
+		$SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+	</script>
+	<script src="/static/search.js">
+	</script>
+	<title>Search - CampFile</title>
+{% endblock head %}
+{% block content %}
+<form action="" method="post">
+	{{ form.csrf_token }}
+	<div>
+		{{ form.search(id="searchbox") }}
+		<label for="searchbox">Search:</label>
+			<span class="error">
+				{% if form.search.errors %}
+					{% for error in for.search.errors %}
+						{{ error }}
+					{% endfor %}
+				{% endif %}
+			</span>
+	</div>
+	<div class="result">
+
+	</div>
+{% endblock content %}

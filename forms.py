@@ -20,3 +20,6 @@ class RegisterForm(Form):
 		'Repeat Password',
 		validators=[DataRequired(), EqualTo('password', message='Passwords must match.')]
 	)
+
+class SearchForm(Form):
+	search = TextField('search', validators=[DataRequired()])
