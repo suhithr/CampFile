@@ -1,16 +1,27 @@
-from app import db, bcrypt, app
-import flask.ext.whooshalchemy as whooshalchemy
+from app import db, bcrypt
+
+from flask.ext.sqlalchemy import SQLAlchemy, BaseQuery
+from sqlalchemy_searchable import SearchQueryMixin, make_searchable
+from sqlalchemy_utils.types import TSVectorType
+
+
+
+class NameQuery(BaseQuery, SearchQueryMixin):
+	pass
+
+
 
 class filestable(db.Model):
+	query_class = NameQuery
 	__tablename__ = 'filestable3'
-	__searchable__ = ['name']
 
 	id = db.Column(db.Integer, primary_key=True)
-	name = db.Column(db.String, nullable=False)
+	name = db.Column(db.UnicodeText, nullable=False)
 	filetype = db.Column(db.String, nullable=False)
 	size = db.Column(db.String, nullable=False)
 	#Movie, music, picture,etc
 	mediatype = db.Column(db.String, nullable=False)
+	search_vector = db.Column(TSVectorType('name'))
 
 	def __init__(self, name, filetype, size, mediatype):
 		self.name = name
@@ -21,7 +32,6 @@ class filestable(db.Model):
 	def __repr__(self):
 		return "<Filename is '%s'" % (self.name)
 
-	whooshalchemy.whoosh_index(app, name)
 
 class User(db.Model):
 	__tablename__ = 'user1'

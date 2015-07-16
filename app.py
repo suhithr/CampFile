@@ -1,15 +1,16 @@
 #!/usr/bin/python
-from flask import Flask, render_template, url_for, request, session, redirect, flash
+from flask import Flask, render_template, url_for, jsonify, request, session, redirect, flash
 from werkzeug import secure_filename
-from flask.ext.sqlalchemy import SQLAlchemy
+from flask.ext.sqlalchemy import SQLAlchemy, BaseQuery
 from flask.ext.bcrypt import Bcrypt
 from flask.ext.socketio import SocketIO, emit, send, join_room, leave_room
 from flask.ext.login import LoginManager, login_user, login_required, logout_user
+from sqlalchemy_searchable import search, make_searchable
 #from flask.ext.uploads import save, Upload, delete
 import os
 import json
-from forms import LoginForm, RegisterForm, SearchForm
-
+from fuzzywuzzy import process
+from forms import *
 
 #TODO
 #Check why stuff is happening out of order - Done, cuz it's working
@@ -40,6 +41,7 @@ app.config.from_object('config.DevelopmentConfig')
 
 #create database object
 db = SQLAlchemy(app)
+make_searchable()
 
 #create brypt object
 bcrypt = Bcrypt(app)
@@ -63,7 +65,7 @@ def home():
 		
 		for i in range(0, len(receivedNames)):
 			securename = secure_filename(receivedNames[i])
-			qry = filestable(securename, receivedExtns[i], receivedSizes[i], 'misc')
+			qry = filestable(unicode(securename), receivedExtns[i], receivedSizes[i], 'misc')
 			db.session.add(qry)
 			db.session.commit()
 
@@ -121,21 +123,27 @@ def logout():
 	flash('You have been logged out')
 	return redirect(url_for('login'))
 
-@app.route('/search')
+@app.route('/search', methods=['GET', 'POST'])
 def search():
 	form = SearchForm()
 	return render_template('search.html', form=form)
 
-@app.route('/results')
+@app.route('/results', methods=['GET', 'POST'])
 def results():
 	if request.method == 'POST':
-		query = request.json["query"]
-		results = filestable.query.whoosh_search(query, 50).all()
-		print results
-		fuzzyResults = process.extract(query, results, limit=10)
+		qry = request.json["query"]
+		print qry
+		dbresults = filestable.query.search(unicode(qry)).all()
+		print dbresults
+		i = 0
+		for res in dbresults:
+			dbresults[i] = res.name.replace("_"," ")
+			i = i + 1
+		fuzzyResults = process.extract(unicode(qry),dbresults,limit=15)
 		print fuzzyResults
 		return jsonify(result = fuzzyResults)
-
+	else:
+		return redirect(url_for('search'))
 
 
 @app.route('/filetransfer')
@@ -206,4 +214,4 @@ def on_leave(room):
 
 #start the server with the run method
 if __name__ == '__main__':
-	socketio.run(app,port=5000)
+	socketio.run(app)
