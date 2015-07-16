@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block head %}
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js">
+	</script>
+	<script type='text/javascript'>
+		//sets the global variable to the prefix to the root of the application
+		$SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+	</script>
+	<script src="static/add.js" type="text/javascript">
+	</script>
+	<title> Stuff - CampFile </title>
+{% endblock head %}
+{% block content %}
+	<div class="instructions">
+	</div>
+	<form action="" method="POST" enctype="multipart/form-data" id="fileform">
+		<input type="file" id="thefiles" name="files[]" required="" multiple="" webkitdirectory="" mozdirectory="">
+		<input type="radio" name="type" value="movie" id="movie">
+		Movies</input>
+		<input type="radio" name="type" value="tv" id="tv">
+		TV Shows</input>
+		<input type="radio" name="type" value="music" id="music">
+		Music</input>
+		<input type="radio" name="type" value="other" id="other">
+		Other</input>
+	</form>
+	<br>
+	<br>
+	<div id="output"></div>
+{% endblock content %}

@@ -55,9 +55,14 @@ login_manager.init_app(app)
 
 from models import *
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/')
 @login_required
 def home():
+	return redirect(url_for('add'))
+
+@app.route('/add', methods=['GET', 'POST'])
+@login_required
+def add():
 	if request.method == 'POST':
 		receivedNames = request.json["names"]
 		receivedSizes = request.json["sizes"]
@@ -71,8 +76,8 @@ def home():
 
 		result = filestable.query.all()
 		print result
-		return render_template('index.html')
-	return render_template('index.html')
+		return render_template('add.html')
+	return render_template('add.html')
 
 
 login_manager.login_view = "login"

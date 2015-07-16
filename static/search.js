@@ -18,8 +18,12 @@ $(document).ready(function () {
 				dataType: 'json',
 				data: JSON.stringify(JSONsearchData),
 				success: function(data) {
-					console.log("And we're back");
-					console.log(data.result);
+					var suggestList = $("ul.suggest-list");
+					suggestList.empty();
+					console.log("And it's back");
+					for(var i = 0; i < data.result.length; i++) {
+						suggestList.append('<div class="suggest-elem"><a href="">' + data.result[i][0] + '</a></div>');
+					}
 				}
 			});
 		}

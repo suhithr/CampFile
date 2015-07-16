@@ -15,8 +15,8 @@
 <form action="" method="post">
 	{{ form.csrf_token }}
 	<div>
-		{{ form.search(id="searchbox") }}
 		<label for="searchbox">Search:</label>
+		{{ form.search(id="searchbox") }}
 			<span class="error">
 				{% if form.search.errors %}
 					{% for error in for.search.errors %}
@@ -25,7 +25,9 @@
 				{% endif %}
 			</span>
 	</div>
-	<div class="result">
+	<div class="suggest-container">
+		<ul class="suggest-list">
 
+		</ul>
 	</div>
 {% endblock content %}
