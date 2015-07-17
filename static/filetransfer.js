@@ -9,7 +9,7 @@ $(document).ready(readyFunction);
 * Make filesharing work in Chrome - Done
 * Fix Browser Interoperability Issues - Done Note: Large files >50MB don't work from CHROME -> Firefox
 * Fix issue with restarting
-*Integrate with the Download Index
+* Integrate with the rest of CampFile
 */
 function readyFunction() {
 	/*document.querySelector('input[type=file]').onchange = function() {
@@ -18,9 +18,19 @@ function readyFunction() {
 
 	/* Initial Setup */
 	var iceServers = {
-		'iceServers': [{
-			'urls': 'stun:stun.l.google.com:19302'
-		}],
+		'iceServers': [
+			{url:'stun:stun.l.google.com:19302'},
+			{url:'stun:stun1.l.google.com:19302'},
+			{url:'stun:stun2.l.google.com:19302'},
+			{url:'stun:stun3.l.google.com:19302'},
+			{url:'stun:stun4.l.google.com:19302'},
+			{url:'stun:stun.ekiga.net'},
+			{url:'stun:stun.ideasip.com'},
+			{url:'stun:stun.iptel.org'},
+			{url:'stun:stun.rixtelecom.se'},
+			{url:'stun:stun.schlund.de'},
+			{url:'stun:stunserver.org'},
+		]
 
 	};
 
@@ -65,8 +75,7 @@ function readyFunction() {
 	var socket = io.connect($SCRIPT_ROOT + namespace);
 
 	//Only create a room if it's not already there in the URL
-	//var room = window.location.hash.substring(1);
-	var room = 'test';
+	var room = window.location.hash.substring(1);
 	if(!room) {
 		room = window.location.hash = randomToken();
 	}
@@ -173,11 +182,12 @@ function readyFunction() {
 		else if(message.type === 'candidate') {
 			console.log("Adding an ICE Candidate");
 			pC.addIceCandidate(new RTCIceCandidate({
+				sdpMLineIndex: message.sdpMLineIndex,
 				candidate: message.candidate
 			}));
 		}
 		else if(message === 'bye') {
-			//Cleanup RTC Connection?
+			//Cleanup RTC Connection
 		}
 	}
 
@@ -314,7 +324,7 @@ function readyFunction() {
 		//Split datachannel message into proper sized chunks, getting the number of chunks
 		var chunkLen;
 		if(webrtcDetectedBrowser === 'firefox') {
-			chunkLen = 100000;
+			chunkLen = 16000;
 		}
 		else { //Assuming it's chrome
 			chunkLen = 64000;

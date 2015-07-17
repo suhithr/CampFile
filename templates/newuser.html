@@ -5,7 +5,7 @@
 <br>
 <form action="" method='POST'>
 	{{ form.csrf_token }}
-	<p>
+	<div>
 		{{ form.username(placeholder="username") }}
 		<span class="error">
 			{% if form.username.errors %}
@@ -14,8 +14,58 @@
 				{% endfor %}
 			{% endif %}
 		</span>
-	</p>
-	<p>
+	</div>
+	<div>
+		{{ form.firstname(placeholder="Firstname") }}
+		<span class="error">
+			{% if form.firstname.errors %}
+				{% for error in for.firstname.errors %}
+					{{ error }}
+				{% endfor %}
+			{% endif %}
+		</span>
+	</div>
+	<div>
+		{{ form.lastname(placeholder="Lastname") }}
+		<span class="error">
+			{% if form.lastname.errors %}
+				{% for error in for.lastname.errors %}
+					{{ error }}
+				{% endfor %}
+			{% endif %}
+		</span>
+	</div>
+	<div>
+		{{ form.hostel(placeholder="Hostel") }}
+		<span class="error">
+			{% if form.hostel.errors %}
+				{% for error in for.hostel.errors %}
+					{{ error }}
+				{% endfor %}
+			{% endif %}
+		</span>
+	</div>
+	<div>
+		{{ form.room(placeholder="Room Number") }}
+		<span class="error">
+			{% if form.room.errors %}
+				{% for error in for.room.errors %}
+					{{ error }}
+				{% endfor %}
+			{% endif %}
+		</span>
+	</div>
+	<div>
+		{{ form.year(placeholder="Year") }}
+		<span class="error">
+			{% if form.year.errors %}
+				{% for error in for.year.errors %}
+					{{ error }}
+				{% endfor %}
+			{% endif %}
+		</span>
+	</div>
+	<div>
 		{{ form.password(placeholder="password") }}
 		<span class="error">
 			{% if form.password.errors %}
@@ -24,8 +74,8 @@
 				{% endfor %}
 			{% endif %}
 		</span>
-	</p>
-	<p>
+	</div>
+	<div>
 		{{ form.confirm(placeholder="confirm") }}
 		<span class="error">
 			{% if form.confirm.errors %}
@@ -34,7 +84,7 @@
 				{% endfor %}
 			{% endif %}
 		</span>
-	</p>
+	</div>
 	<button type="submit">Register!</button>
 </form>
 {% endblock %}
