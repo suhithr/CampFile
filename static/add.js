@@ -8,6 +8,9 @@ function readyFunction() {
 	var input = document.getElementById('thefiles');
 	var output = document.getElementById('output');
 	var url = $SCRIPT_ROOT + '/add';
+	$('#checkToggle').click(function() {
+		$('input[type=checkbox]').trigger('click');
+	});
 
 
 
@@ -40,9 +43,13 @@ function readyFunction() {
 				allowedExtns.push('aac');
 			}
 
+		//Show the Add Files Button
+		$('#addFiles').show();
+
 		console.log('Allowed extns : ' + allowedExtns);
 
 		var files = e.target.files; //FileList
+		$("div#input").append("");
 		for (var i = 0, f; f = files[i]; ++i) {			
 
 			
@@ -56,48 +63,65 @@ function readyFunction() {
 			if(musicButton.checked || tvButton.checked || movieButton.checked) {
 				if(allowedExtns.indexOf(calextn) > -1 ) {
 					console.log('Allowed');
+
+					//Replaceing spaces with hyphens
+					var fId = f.name.replace(/\s+/g, "-");
+
+					$("div#output").append("<input class=" + String(fId) + " id=" + String(fId) + " type='text'></input>");
+					document.getElementById(fId).defaultValue = String(f.name);
+					$("div#output").append("<input class=" + String(fId) +  " id=" + String(i) + " type='checkbox'></input><br>");
+				}
+			}
+			else {
+				//Replacing spaces with hyphens
+					var fId = f.name.replace(/\s+/g, "-");
+
+					$("div#output").append("<input class=" + String(fId) + " id=" + String(fId) + " type='text'></input>");
+					document.getElementById(fId).defaultValue = String(f.name);
+					$("div#output").append("<input class=" + String(fId) + " id=" + String(i) + " type='checkbox'></input><br>");
+				}	
+		}
+
+		//Sending the Checked Files
+		$('#addFiles').click( function() {
+			$('input[type=checkbox]').each(function () {
+				if(this.checked) {
+
+					var cbId = parseInt(this.id);
+					
+					var calextn = files[cbId].name.substr((~-files[cbId].name.lastIndexOf(".") >>> 0) + 2);
+					calextn = String(calextn).toLowerCase();
 					if( calextn === ""){
 						extns.push('""');
 					}
 					else {
 						extns.push('"' + calextn + '"');
 					}
-					sizes.push('"' + String(f.size) + '"');
-					names.push('"' + String(f.name) + '"');
 
-					$("div#output").append("<input class=" + f.name + " value=" + f.name + "></input><br>");
+					sizes.push('"' + String(files[cbId].size) + '"');
+					var newName = document.getElementById(this.className).value;
+					names.push('"' + String(newName) + '"');
+
 				}
-			}
-			else {
-				//Dirty Fix for filename with no extension
-				if( calextn === ""){
-					extns.push('""');
-				}
-				else {
-					extns.push('"' + calextn + '"');
-				}
-				sizes.push('"' + String(f.size) + '"');
-				names.push('"' + String(f.name) + '"');
-				output.append('<input class=' + f.name + ' value=' + f.name + '></input><br>');
-			}	
-		}
-		
-		var form_data = '{ "names" : [' + names + '], "sizes" : [' + sizes + '], "extensions" : [' + extns + ']}';
-		console.log(form_data);
-		//Converts JSON String to an object, also check JSON Validity of string
-		var JsonFormData = JSON.parse(form_data); 
-		console.log(JsonFormData);
-		$.ajax({
-			type: "POST", //Since the default is GET
-			url: url,
-			async: true, //so that it's asynchronous
-			processData: false, //So it doesn't automatically get converted to strings
-			contentType: 'application/json;charset=UTF-8', //So it doesn't set any header
-			dataType: 'json',
-			success: function(data) {
-				console.log("Data Received!");
-			},
-			data: JSON.stringify(JsonFormData, null, '\t'),
+			});
+
+			var form_data = '{ "names" : [' + names + '], "sizes" : [' + sizes + '], "extensions" : [' + extns + ']}';
+			console.log(form_data);
+			//Converts JSON String to an object, also check JSON Validity of string
+			var JsonFormData = JSON.parse(form_data); 
+			console.log(JsonFormData);
+			$.ajax({
+				type: "POST", //Since the default is GET
+				url: url,
+				async: true, //so that it's asynchronous
+				processData: false, //So it doesn't automatically get converted to strings
+				contentType: 'application/json;charset=UTF-8', //So it doesn't set any header
+				dataType: 'json',
+				success: function(data) {
+					console.log("Data Received!");
+				},
+				data: JSON.stringify(JsonFormData, null, '\t'),
+			});
 		});
 	}
 }

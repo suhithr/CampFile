@@ -13,18 +13,22 @@
 {% block content %}
 	<div class="instructions">
 	</div>
-	<form action="" method="POST" enctype="multipart/form-data" id="fileform">
-		<input type="file" id="thefiles" name="files[]" required="" multiple="" webkitdirectory="" mozdirectory="">
-		<input type="radio" name="type" value="movie" id="movie">
-		Movies</input>
-		<input type="radio" name="type" value="tv" id="tv">
-		TV Shows</input>
-		<input type="radio" name="type" value="music" id="music">
-		Music</input>
-		<input type="radio" name="type" value="other" id="other">
-		Other</input>
-	</form>
-	<br>
-	<br>
+	<div class="input">
+		<form action="" method="POST" enctype="multipart/form-data" id="fileform">
+			<input type="file" id="thefiles" name="files[]" required="" multiple="" webkitdirectory="" mozdirectory="">
+			<input type="radio" name="type" value="movie" id="movie">
+			Movies</input>
+			<input type="radio" name="type" value="tv" id="tv">
+			TV Shows</input>
+			<input type="radio" name="type" value="music" id="music">
+			Music</input>
+			<input type="radio" name="type" value="other" id="other">
+			Other</input>
+		</form>
+		<br>
+		<br>
+		<button id='checkToggle' >Check/Uncheck All</button>
+	</div>
 	<div id="output"></div>
+	<button id="addFiles" hidden>Add to Index</button>
 {% endblock content %}
