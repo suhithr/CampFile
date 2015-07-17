@@ -10,6 +10,7 @@ function readyFunction() {
 	var output = document.getElementById('output');
 	var url = $SCRIPT_ROOT + '/add';
 	var specType = '';
+	var specNo;
 	$('#checkToggle').click(function() {
 		$('input[type=checkbox]').trigger('click');
 	});
@@ -35,9 +36,11 @@ function readyFunction() {
 				allowedExtns.push('mp4','3gp','avi','flv','m4v','mov','mkv');
 				if(movieButton.checked) {
 					specType = 'movie';
+					specNo = 0;
 				}
 				if(tvButton.checked) {
 					specType = 'tv';
+					specNo = 1;
 				}
 			}
 			if(musicButton.checked) {
@@ -50,9 +53,11 @@ function readyFunction() {
 				allowedExtns.push('wma');
 				allowedExtns.push('aac');
 				specType = 'music';
+				specNo = 2;
 			}
 			else {
 				specType = 'other';
+				specNo = 3;
 			}
 
 		//Show the Add Files Button
@@ -85,7 +90,7 @@ function readyFunction() {
 						<select id='mediatype" + String(i) +  "' name='mediatype'><option value='movie'>Movie</option><option value='tv'>TV</option>\
 						<option value='music'>Music</option><option value='other'>Other</option></select>");
 					document.getElementById(fId).defaultValue = String(f.name);
-					$('mediatype' + this.id).find("option[val='" + specType + "']").attr("selected", "selected");
+				document.getElementById('mediatype' + String(i)).options[specNo].selected = true;
 				}
 			}
 			else {
@@ -98,7 +103,7 @@ function readyFunction() {
 					<select id='mediatype" + String(i) +  "' name='mediatype'><option value='movie'>Movie</option><option value='tv'>TV</option>\
 					<option value='music'>Music</option><option value='other'>Other</option></select>");
 				document.getElementById(fId).defaultValue = String(f.name);
-				$('mediatype' + this.id).find("option[val='" + specType + "']").attr("selected", "selected");
+				document.getElementById('mediatype' + String(i)).options[specNo].selected = true;
 
 			}	
 		}
