@@ -67,19 +67,20 @@ function readyFunction() {
 					//Replaceing spaces with hyphens
 					var fId = f.name.replace(/\s+/g, "-");
 
-					$("div#output").append("<input class=" + String(fId) + " id=" + String(fId) + " type='text'></input>");
+					$("div#output").append("<div class="+ String(i) + "></div>");
+					$("div." + String(i)).append("<input class=" + String(fId) + " id=" + String(fId) + " type='text'></input><input class=" + String(fId) +  " id=" + String(i) + " type='checkbox'></input>");
 					document.getElementById(fId).defaultValue = String(f.name);
-					$("div#output").append("<input class=" + String(fId) +  " id=" + String(i) + " type='checkbox'></input><br>");
 				}
 			}
 			else {
 				//Replacing spaces with hyphens
-					var fId = f.name.replace(/\s+/g, "-");
+				var fId = f.name.replace(/\s+/g, "-");
 
-					$("div#output").append("<input class=" + String(fId) + " id=" + String(fId) + " type='text'></input>");
-					document.getElementById(fId).defaultValue = String(f.name);
-					$("div#output").append("<input class=" + String(fId) + " id=" + String(i) + " type='checkbox'></input><br>");
-				}	
+				$("div#output").append("<div class="+ String(i) + "></div>");
+				$("div." + String(i)).append("<input class=" + String(fId) + " id=" + String(fId) + " type='text'></input><input class=" + String(fId) +  " id=" + String(i) + " type='checkbox'></input>");
+				document.getElementById(fId).defaultValue = String(f.name);
+
+			}	
 		}
 
 		//Sending the Checked Files
@@ -99,9 +100,13 @@ function readyFunction() {
 					}
 
 					sizes.push('"' + String(files[cbId].size) + '"');
+					//Pushing the Name
 					var newName = document.getElementById(this.className).value;
 					names.push('"' + String(newName) + '"');
 
+					//Hiding the sent textbox, then the checkbox
+					$('div.' + this.id).hide(800);
+					$('#' + this.id).hide(800);
 				}
 			});
 
