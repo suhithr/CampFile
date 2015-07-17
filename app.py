@@ -4,7 +4,7 @@ from werkzeug import secure_filename
 from flask.ext.sqlalchemy import SQLAlchemy, BaseQuery
 from flask.ext.bcrypt import Bcrypt
 from flask.ext.socketio import SocketIO, emit, send, join_room, leave_room
-from flask.ext.login import LoginManager, login_user, login_required, logout_user
+from flask.ext.login import LoginManager, login_user, login_required, logout_user, current_user
 from sqlalchemy_searchable import search, make_searchable
 #from flask.ext.uploads import save, Upload, delete
 import os
@@ -26,14 +26,11 @@ from forms import *
 
 #Add an option to view the files of others in the index in the home page (after login that is)
 #
-#->>>Add an option to change file names before uploading
+#Add an option to change file names before uploading - Done
 #Make it to see only your hostel stuff and friends
 
-#Add search (Send the query onchange with ajax and generate 
-#a list of fuzzy candidates, send the list via ajax.... Then
-#with clever css display it) - Gotta do the display and test the searching!@
-
-
+#Add search - Done
+#Make search with dropdown - Done
 
 #Creating the flask app and pointing to the config
 app = Flask(__name__)
@@ -70,7 +67,7 @@ def add():
 		
 		for i in range(0, len(receivedNames)):
 			securename = secure_filename(receivedNames[i])
-			qry = filestable(unicode(securename), receivedExtns[i], receivedSizes[i], 'misc')
+			qry = filestable(unicode(securename), receivedExtns[i], receivedSizes[i], 'misc', current_user.id)
 			db.session.add(qry)
 			db.session.commit()
 
@@ -113,7 +110,12 @@ def newuser():
 	if form.validate_on_submit():
 		user = User(
 			username=form.username.data,
-			password=form.password.data
+			password=form.password.data,
+			firstname=form.firstname.data,
+			lastname= form.lastname.data,
+			hostel=form.hostel.data,
+			year=form.year.data,
+			room=form.room.data
 		)
 		db.session.add(user)
 		db.session.commit()

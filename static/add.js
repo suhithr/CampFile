@@ -5,9 +5,11 @@ function readyFunction() {
 	var names = [];
 	var extns = [];
 	var calextn = "";
+	var mtype = [];
 	var input = document.getElementById('thefiles');
 	var output = document.getElementById('output');
 	var url = $SCRIPT_ROOT + '/add';
+	var specType = '';
 	$('#checkToggle').click(function() {
 		$('input[type=checkbox]').trigger('click');
 	});
@@ -31,6 +33,12 @@ function readyFunction() {
 		var allowedExtns = [];
 			if(movieButton.checked || tvButton.checked) {
 				allowedExtns.push('mp4','3gp','avi','flv','m4v','mov','mkv');
+				if(movieButton.checked) {
+					specType = 'movie';
+				}
+				if(tvButton.checked) {
+					specType = 'tv';
+				}
 			}
 			if(musicButton.checked) {
 				allowedExtns.push('mp3');
@@ -41,6 +49,10 @@ function readyFunction() {
 				allowedExtns.push('m4a');
 				allowedExtns.push('wma');
 				allowedExtns.push('aac');
+				specType = 'music';
+			}
+			else {
+				specType = 'other';
 			}
 
 		//Show the Add Files Button
@@ -64,12 +76,16 @@ function readyFunction() {
 				if(allowedExtns.indexOf(calextn) > -1 ) {
 					console.log('Allowed');
 
-					//Replaceing spaces with hyphens
+					//Replac ing spaces with hyphens
 					var fId = f.name.replace(/\s+/g, "-");
 
 					$("div#output").append("<div class="+ String(i) + "></div>");
-					$("div." + String(i)).append("<input class=" + String(fId) + " id=" + String(fId) + " type='text'></input><input class=" + String(fId) +  " id=" + String(i) + " type='checkbox'></input>");
+					$("div." + String(i)).append("<input class=" + String(fId) + " id=" + String(fId) + " type='text'></input>\
+						<input class=" + String(fId) +  " id=" + String(i) + " type='checkbox'></input>\
+						<select id='mediatype" + String(i) +  "' name='mediatype'><option value='movie'>Movie</option><option value='tv'>TV</option>\
+						<option value='music'>Music</option><option value='other'>Other</option></select>");
 					document.getElementById(fId).defaultValue = String(f.name);
+					$('mediatype' + this.id).find("option[val='" + specType + "']").attr("selected", "selected");
 				}
 			}
 			else {
@@ -77,8 +93,12 @@ function readyFunction() {
 				var fId = f.name.replace(/\s+/g, "-");
 
 				$("div#output").append("<div class="+ String(i) + "></div>");
-				$("div." + String(i)).append("<input class=" + String(fId) + " id=" + String(fId) + " type='text'></input><input class=" + String(fId) +  " id=" + String(i) + " type='checkbox'></input>");
+				$("div." + String(i)).append("<input class=" + String(fId) + " id=" + String(fId) + " type='text'></input>\
+					<input class=" + String(fId) +  " id=" + String(i) + " type='checkbox'></input>\
+					<select id='mediatype" + String(i) +  "' name='mediatype'><option value='movie'>Movie</option><option value='tv'>TV</option>\
+					<option value='music'>Music</option><option value='other'>Other</option></select>");
 				document.getElementById(fId).defaultValue = String(f.name);
+				$('mediatype' + this.id).find("option[val='" + specType + "']").attr("selected", "selected");
 
 			}	
 		}
@@ -92,7 +112,7 @@ function readyFunction() {
 					
 					var calextn = files[cbId].name.substr((~-files[cbId].name.lastIndexOf(".") >>> 0) + 2);
 					calextn = String(calextn).toLowerCase();
-					if( calextn === ""){
+					if( calextn === "") {
 						extns.push('""');
 					}
 					else {
@@ -103,6 +123,10 @@ function readyFunction() {
 					//Pushing the Name
 					var newName = document.getElementById(this.className).value;
 					names.push('"' + String(newName) + '"');
+
+					var mtypeElem = $("select#" + fId);
+
+					mtype.push('"' + + '"');
 
 					//Hiding the sent textbox, then the checkbox
 					$('div.' + this.id).hide(800);
