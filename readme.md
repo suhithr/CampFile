@@ -26,4 +26,5 @@ Selected files of limited size can be sent between users via WebRTC DataChannels
 - [x] Chunking and Assembling of Files
 - [x] Provide Chrome Functionality
 - [ ] Provide cross-browser functionality *Done to a limited extent*
+- [x] Make Download User-Friendly, added a name, and it's automatically filled in
 - [ ] Integrate with login for CampFile

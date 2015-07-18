@@ -69,7 +69,7 @@ function readyFunction(room_name) {
 	var pC = null;
 	var dataChannel = null;
 	var isInitiator;
-	var receiveBuffer, receivedSize, size;
+	var receiveBuffer = [], receivedSize = 0, size;
 
 	/* Signalling Server */
 	var namespace = '';
@@ -130,12 +130,6 @@ function readyFunction(room_name) {
 	socket.emit('got connected');
 
 	socket.emit('create or join', room);
-
-	
-
-	if(location.hostname.match(/localhost|127\.0\.0/)) {
-		socket.emit('ipaddr');
-	}
 
 	/* Send the message to Signalling Server */
 	function sendMessage(message) {
@@ -244,16 +238,17 @@ function readyFunction(room_name) {
 
 	function onReceiveMessage(event) {
 		if(typeof event.data === 'string') {
-			if(IsNumeric(event.data)) {
+			if(/^\d+$/.test(event.data) && !isNaN(event.data)) {
 				size = parseInt(event.data);
 				receiveBuffer = [];
 				receivedSize = 0;
 				console.log('Expecting a total of ' + size + ' bytes');
 				return;
 			}
-
 			else {
-				name  = String(event.data);
+				name = event.data;
+				console.log("Received name is " + name);
+				return;
 			}
 		}
 		console.log('Received message ' + event.data.byteLength);
@@ -319,7 +314,7 @@ function readyFunction(room_name) {
 			chunkLen = 16000;
 		}
 		else { //Assuming it's chrome
-			chunkLen = 64000;
+			chunkLen = 16000;
 		}	
 		var file = theFile;
 		var len = file.size;
@@ -327,7 +322,7 @@ function readyFunction(room_name) {
 		var blob;
 
 		//Inform the file size to the recepient
-		console.log('The filesize is ' + len + ' bytes');
+		console.log('The filesize is : ' + len + ' bytes');
 		dataChannel.send(len);
 		console.log('The file name is : ' + file.name);
 		dataChannel.send(file.name);
@@ -361,6 +356,7 @@ function readyFunction(room_name) {
 		var fileURL = URL.createObjectURL(data);
 		var text = 'Click to download ' + name + ' of size ' + size + ' bytes';
 		downloadLink.innerHTML = text;
+		downloadLink.download = name;
 		downloadLink.href = fileURL;
 	}
 
