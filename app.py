@@ -11,6 +11,7 @@ import os
 import json
 from fuzzywuzzy import process
 from forms import *
+import socket as skt
 
 #TODO
 #Check why stuff is happening out of order - Done, cuz it's working
@@ -152,10 +153,11 @@ def results():
 	else:
 		return redirect(url_for('search'))
 
-
-@app.route('/filetransfer')
-def filetransfer():
-	return render_template('filetransfer.html')
+@app.route('/filetransfer/', defaults={'room_name': 'default'})
+@app.route('/filetransfer/<room_name>')
+@login_required
+def filetransfer(room_name):
+	return render_template('filetransfer.html', room_name=room_name)
 
 clients = {}
 
@@ -171,7 +173,7 @@ def handle_got_connected():
 
 @socketio.on('create or join')
 def create_or_join(room):
-	print 'Received request from clientid' + request.namespace.socket.sessid + ' to create or join room ' + room
+	print 'Received request from clientid' + request.namespace.socket.sessid + ' to create or join room ' + str(room)
 	if str(room) in clients:
 		clients[str(room)].append(request.namespace.socket.sessid)
 		print 'Dictionary being updated'
@@ -184,11 +186,11 @@ def create_or_join(room):
 	if numClients <= 1:
 		join_room(str(room))
 		logger('Client ID ' + request.namespace.socket.sessid + ' created room ' + str(room))
-		print 'Client ID ' + request.namespace.socket.sessid + ' created room ' + room
+		print 'Client ID ' + request.namespace.socket.sessid + ' created room ' + str(room)
 		emit('created', room, request.namespace.socket.sessid)
 	elif numClients == 2:
 		logger('Client ID ' + request.namespace.socket.sessid + ' joined room ' + str(room))
-		print 'Client ID ' + request.namespace.socket.sessid + ' joined room ' + room
+		print 'Client ID ' + request.namespace.socket.sessid + ' joined room ' + str(room)
 		join_room(str(room))
 		emit('joined', room, request.namespace.socket.sessid)
 		emit('nowready', room=room) #This sends it to all the clients FROM the server since the socketio
@@ -213,10 +215,14 @@ def on_disconnect(room):
 def on_leave(room):
 	if str(room) in clients:
 		if request.namespace.socket.sessid in clients[str(room)]:
-			logger('Client id ' + request.namespace.socket.sessid + ' has left the room ' + room)
-			print 'Client id ' + request.namespace.socket.sessid + ' has left the room ' + room
+			logger('Client id ' + request.namespace.socket.sessid + ' has left the room ' + str(room))
+			print 'Client id ' + request.namespace.socket.sessid + ' has left the room ' + str(room)
 			leave_room(str(room))
 			clients[str(room)].remove(request.namespace.socket.sessid)
+
+@socketio.on('ipaddr')
+def on_ipaddr():
+	print 'IP ADDRESS IS: ' + str(skt.gethostbyname(skt.gethostname()))
 
 
 #start the server with the run method

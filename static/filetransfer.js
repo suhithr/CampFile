@@ -1,5 +1,5 @@
 'use strict'
-$(document).ready(readyFunction);
+
 /*
 * Make text sharing work - Done
 * Make it close the connection properly - Done
@@ -8,10 +8,11 @@ $(document).ready(readyFunction);
 * Make DataChannels much faster
 * Make filesharing work in Chrome - Done
 * Fix Browser Interoperability Issues - Done Note: Large files >50MB don't work from CHROME -> Firefox
-* Fix issue with restarting
+* Fix issue with restarting -Done
+* Make the connectione always work, or add something so user is prompted to reload if it fails
 * Integrate with the rest of CampFile
 */
-function readyFunction() {
+function readyFunction(room_name) {
 	/*document.querySelector('input[type=file]').onchange = function() {
 		var file = this.files[0];
 	};*/
@@ -47,6 +48,7 @@ function readyFunction() {
 	};
 	var theFile = null;
 	var roomURL = document.getElementById('url');
+	updateRoomURL();
 	var fileInput = document.getElementById('file');
 	var downloadLink = document.getElementById('dllink');
 
@@ -75,22 +77,16 @@ function readyFunction() {
 	var socket = io.connect($SCRIPT_ROOT + namespace);
 
 	//Only create a room if it's not already there in the URL
-	var room = window.location.hash.substring(1);
-	if(!room) {
-		room = window.location.hash = randomToken();
-	}
+	var room = room_name;
+
+
+	console.log('Room ought to be: ' + room);
 
 	//This seems to be called only after the 'create and join' emit is called
 	/*socket.on('connect', function() {
 		console.log(this.socket.sessionid)
 		socket.emit('got connected');
 	}); */
-
-
-	socket.on('ipaddr', function(ipaddr) {
-		console.log('Server IP address is: ' + ipaddr);
-		updateRoomURL(ipaddr);
-	});
 
 	socket.on('created', function(room, clientId) {
 		console.log('Created a room: ' + room + ' - my client id is: ' + clientId);
@@ -108,10 +104,8 @@ function readyFunction() {
 	socket.on('full', function(room, clientId) {
 		//The idea is to create a new room for them
 		console.log('Room : ' + room + ' is full. A new room will be created for you.');
-		//window.location.hash = '';
-		//window.location.reload();
-		//For now when the room is full let it disconnect and redirect to the home page
-		//socket.emit('fullsodisconnect', clientId);
+		var newRoom = prompt('Enter a new room to join: ');
+		window.location.reload();
 	});
 
 	socket.on('nowready', function() {
@@ -150,15 +144,9 @@ function readyFunction() {
 	}
 
 	/*Updates URL on the page so users can open in a new tab for checking */
-	function updateRoomURL(ipaddr) {
-		var url;
-		if(!ipaddr) {
-			url = location.href;
-		}
-		else {
-			url = location.protocol + '//' + ipaddr + ':5000/#' + room;
-		}
-		roomURL.innerHTML = url;
+	function updateRoomURL() {
+		roomURL.innerHTML = '<a href=' + window.location.href + '>' + window.location.href + '</a>';
+		console.log('Updated URL is: ' + url);
 	}
 
 	function clue(text) {
@@ -255,14 +243,18 @@ function readyFunction() {
 	}
 
 	function onReceiveMessage(event) {
-
-
 		if(typeof event.data === 'string') {
-			size = parseInt(event.data);
-			receiveBuffer = [];
-			receivedSize = 0;
-			console.log('Expecting a total of ' + size + ' bytes');
-			return;
+			if(IsNumeric(event.data)) {
+				size = parseInt(event.data);
+				receiveBuffer = [];
+				receivedSize = 0;
+				console.log('Expecting a total of ' + size + ' bytes');
+				return;
+			}
+
+			else {
+				name  = String(event.data);
+			}
 		}
 		console.log('Received message ' + event.data.byteLength);
 		receiveBuffer.push(event.data);
@@ -304,7 +296,7 @@ function readyFunction() {
 	}
 
 	function restartConnection() {
-		restart = true;
+		//restart = true;
 		handleUnload();
 		console.log('Restarting the connection');
 		socket.emit('create or join', room);
@@ -337,6 +329,8 @@ function readyFunction() {
 		//Inform the file size to the recepient
 		console.log('The filesize is ' + len + ' bytes');
 		dataChannel.send(len);
+		console.log('The file name is : ' + file.name);
+		dataChannel.send(file.name);
 
 		var sliceFile = function(offset) {
 			var reader = new FileReader();
@@ -354,7 +348,6 @@ function readyFunction() {
 					if( len > offset + e.target.result.byteLength) {
 						window.setTimeout(sliceFile, 0, offset + chunkLen);
 					}
-
 				};
 			})(file);
 			var slice = file.slice(offset, offset + chunkLen);
@@ -366,7 +359,7 @@ function readyFunction() {
 
 	function readyForDownload(data) {
 		var fileURL = URL.createObjectURL(data);
-		var text = 'Click to download ' + data.name + ' of size ' + file.size + ' bytes';
+		var text = 'Click to download ' + name + ' of size ' + size + ' bytes';
 		downloadLink.innerHTML = text;
 		downloadLink.href = fileURL;
 	}
