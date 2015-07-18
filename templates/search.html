@@ -3,11 +3,18 @@
 
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js">
 	</script>
+	<script>window.jQuery || document.write('<script src="{{
+  url_for('static', filename='jquery-1.11.3.min.js') }}">\x3C/script>')</script>
 	<script type='text/javascript'>
 		//sets the global variable to the prefix to the root of the application
 		$SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 	</script>
 	<script src="/static/search.js">
+	</script>
+	<script type="text/javascript">
+		$(document).ready(function() {
+			readyFunction("{{ current_user.hostel }}")
+		});
 	</script>
 	<title>Search - CampFile</title>
 {% endblock head %}
@@ -24,6 +31,7 @@
 					{% endfor %}
 				{% endif %}
 			</span>
+		
 	</div>
 	<div class="suggest-container">
 		<ul class="suggest-list">

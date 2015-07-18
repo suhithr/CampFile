@@ -10,10 +10,9 @@ class NameQuery(BaseQuery, SearchQueryMixin):
 	pass
 
 
-
 class filestable(db.Model):
 	query_class = NameQuery
-	__tablename__ = 'filestable3'
+	__tablename__ = 'filestable'
 
 	id = db.Column(db.Integer, primary_key=True)
 	name = db.Column(db.UnicodeText, nullable=False)
@@ -21,21 +20,24 @@ class filestable(db.Model):
 	size = db.Column(db.String, nullable=False)
 	#Movie, music, picture,etc
 	mediatype = db.Column(db.String, nullable=False)
-	owner = db.Column(db.String, nullable=False)
+	ownerid = db.Column(db.String, nullable=False)
+	ownerhostel = db.Column(db.String, nullable=False)
 	search_vector = db.Column(TSVectorType('name'))
 
-	def __init__(self, name, filetype, size, mediatype):
+	def __init__(self, name, filetype, size, mediatype, ownerid, ownerhostel):
 		self.name = name
 		self.filetype  = filetype
 		self.size = size
 		self.mediatype = mediatype
+		self.ownerid = ownerid
+		self.ownerhostel = ownerhostel
 
 	def __repr__(self):
 		return "<Filename is '%s'" % (self.name)
 
 
 class User(db.Model):
-	__tablename__ = 'user1'
+	__tablename__ = 'user'
 
 	id = db.Column(db.Integer, primary_key=True)
 	username = db.Column(db.String, nullable=False)

@@ -11,7 +11,6 @@ import os
 import json
 from fuzzywuzzy import process
 from forms import *
-import socket as skt
 
 #TODO
 #Check why stuff is happening out of order - Done, cuz it's working
@@ -31,7 +30,7 @@ import socket as skt
 #Make it to see only your hostel stuff and friends
 
 #Add search - Done
-#Make search with dropdown - Done
+#Make search with dropdown -
 
 #Creating the flask app and pointing to the config
 app = Flask(__name__)
@@ -142,12 +141,13 @@ def results():
 		qry = request.json["query"]
 		print qry
 		dbresults = filestable.query.search(unicode(qry)).all()
-		print dbresults
 		i = 0
+		print dbresults
 		for res in dbresults:
 			dbresults[i] = res.name.replace("_"," ")
+			print res.ownerhostel
 			i = i + 1
-		fuzzyResults = process.extract(unicode(qry),dbresults,limit=15)
+		fuzzyResults = process.extract(unicode(qry),dbresults,limit=5)
 		print fuzzyResults
 		return jsonify(result = fuzzyResults)
 	else:
@@ -168,7 +168,6 @@ def logger(text):
 
 @socketio.on('got connected')
 def handle_got_connected():
-	print request.namespace.socket.sessid
 	print('Received id: ' + str(request.namespace.socket.sessid))
 
 @socketio.on('create or join')
@@ -219,10 +218,6 @@ def on_leave(room):
 			print 'Client id ' + request.namespace.socket.sessid + ' has left the room ' + str(room)
 			leave_room(str(room))
 			clients[str(room)].remove(request.namespace.socket.sessid)
-
-@socketio.on('ipaddr')
-def on_ipaddr():
-	print 'IP ADDRESS IS: ' + str(skt.gethostbyname(skt.gethostname()))
 
 
 #start the server with the run method

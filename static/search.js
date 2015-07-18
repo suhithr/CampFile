@@ -1,4 +1,4 @@
-$(document).ready(function () {
+function readyFunction(current_user_hostel) {
 
 	var url = $SCRIPT_ROOT + '/results';
 
@@ -22,10 +22,10 @@ $(document).ready(function () {
 					suggestList.empty();
 					console.log("And it's back");
 					for(var i = 0; i < data.result.length; i++) {
-						suggestList.append('<div class="suggest-elem"><a href="">' + data.result[i][0] + '</a></div>');
+						suggestList.append('<div class="suggest-elem"><a href="">' + data.result[i][0] + ' -> ' + current_user_hostel + '</a></div>');
 					}
 				}
 			});
 		}
 	});
-});
+}

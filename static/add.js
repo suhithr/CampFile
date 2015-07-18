@@ -15,8 +15,7 @@ function readyFunction() {
 		$('input[type=checkbox]').trigger('click');
 	});
 
-
-
+	//Shows to upload FOLDER or FILES depending on the browser
 	var isChrome = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
 	if (isChrome) {
 		$("div.instructions").text("Select the folder you wish to scan.");
@@ -43,7 +42,7 @@ function readyFunction() {
 					specNo = 1;
 				}
 			}
-			if(musicButton.checked) {
+			else if(musicButton.checked) {
 				allowedExtns.push('mp3');
 				allowedExtns.push('wav');
 				allowedExtns.push('flac');

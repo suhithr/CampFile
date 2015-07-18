@@ -3,3 +3,4 @@
 config.py
 /static/lib/adapter.js
 /static/favicon.ico
+/static/jquery*
