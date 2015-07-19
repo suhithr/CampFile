@@ -67,7 +67,7 @@ def add():
 		
 		for i in range(0, len(receivedNames)):
 			securename = secure_filename(receivedNames[i])
-			qry = filestable(unicode(securename), receivedExtns[i], receivedSizes[i], 'misc', current_user.id)
+			qry = filestable(unicode(securename), receivedExtns[i], receivedSizes[i], 'misc', current_user.id, current_user.hostel)
 			db.session.add(qry)
 			db.session.commit()
 
@@ -131,6 +131,7 @@ def logout():
 	return redirect(url_for('login'))
 
 @app.route('/search', methods=['GET', 'POST'])
+@login_required
 def search():
 	form = SearchForm()
 	return render_template('search.html', form=form)
@@ -140,15 +141,32 @@ def results():
 	if request.method == 'POST':
 		qry = request.json["query"]
 		print qry
-		dbresults = filestable.query.search(unicode(qry)).all()
+		dbresults = []
+		dbresults = filestable.query.filter_by(ownerhostel = current_user.hostel).search(unicode(qry)).all()
 		i = 0
-		print dbresults
-		for res in dbresults:
-			dbresults[i] = res.name.replace("_"," ")
-			print res.ownerhostel
-			i = i + 1
-		fuzzyResults = process.extract(unicode(qry),dbresults,limit=5)
-		print fuzzyResults
+		print 'HELLO ' + str(dbresults)
+
+		if len(dbresults) < 15:
+			print "Inside"
+			much = 15 - len(dbresults)
+			dbresults  += filestable.query.search(unicode(qry)).limit(much).all()
+
+		print len(dbresults)
+		if len(dbresults) > 0:
+			print 'dbresults is : ' + str(type(dbresults))
+			print 'Type of dbresults[0] is : ' + str(type(dbresults[0]))
+			dbresultsname = []
+			print 'AND NOW ' + str(dbresults[0].ownerhostel)
+			for i in range(0, len(dbresults)):
+				print str(type(dbresults[i]))
+				dbresultsname.append(str(dbresults[i].name.replace("_"," ")))
+				i = i + 1
+
+			fuzzyResults = process.extract(unicode(qry),dbresultsname,limit=5)
+			print 'AND HI ' + str(fuzzyResults)
+		else:
+			fuzzyResults = ""
+			print "Sorry No results"
 		return jsonify(result = fuzzyResults)
 	else:
 		return redirect(url_for('search'))

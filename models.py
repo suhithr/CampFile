@@ -22,7 +22,7 @@ class filestable(db.Model):
 	mediatype = db.Column(db.String, nullable=False)
 	ownerid = db.Column(db.String, nullable=False)
 	ownerhostel = db.Column(db.String, nullable=False)
-	search_vector = db.Column(TSVectorType('name'))
+	search_vector = db.Column(TSVectorType('name', 'ownerhostel'))
 
 	def __init__(self, name, filetype, size, mediatype, ownerid, ownerhostel):
 		self.name = name
@@ -31,10 +31,10 @@ class filestable(db.Model):
 		self.mediatype = mediatype
 		self.ownerid = ownerid
 		self.ownerhostel = ownerhostel
-
+'''
 	def __repr__(self):
 		return "<Filename is '%s'" % (self.name)
-
+'''
 
 class User(db.Model):
 	__tablename__ = 'user'

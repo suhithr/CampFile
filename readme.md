@@ -19,6 +19,7 @@ Selected files of limited size can be sent between users via WebRTC DataChannels
 - [x] Implement multi-folder upload
 - [ ] Show User Progress of indexing
 - [x] Build Fuzzy Search Functionality
+- [x] Search consider hostel for results too
 - [ ] Integrate with the app
 - [x] Create Peer Connection and DataChannel
 - [x] Implement sending of text between peers
