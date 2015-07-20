@@ -58,6 +58,8 @@ from models import *
 def home(page=1):
 	if current_user.is_authenticated():
 		files = filestable.query.filter_by(ownerhostel = current_user.hostel).paginate(page,app.config["FILES_PER_PAGE"], False)
+		for i in range(0, len(files.items)):
+			files.items[i].name = files.items[i].name.replace("_"," ")
 		return render_template('index.html', files=files)
 	else:
 		return redirect(url_for('add'))
@@ -85,9 +87,11 @@ def add():
 login_manager.login_view = "login"
 login_manager.login_message = "Please login to view this page"
 
+
 @login_manager.user_loader
 def load_user(userid):
 	return User.query.filter(User.id == int(userid)).first()
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -97,7 +101,7 @@ def login():
 	if request.method == 'POST': 
 		if form.validate_on_submit():
 			user = User.query.filter_by(username=request.form['username']).first()
-			if user is not None and bcrypt.check_password_hash( user.password, request.form['password'] ):
+			if user is not None and bcrypt.check_password_hash(user.password, request.form['password']):
 				#session['logged_in'] = True
 				result = login_user(user)
 				print result
@@ -109,6 +113,7 @@ def login():
 			render_template('login.html', form=form, error=error)
 	return render_template('login.html', form=form)
 
+
 @app.route('/newuser', methods=['GET', 'POST'])
 def newuser():
 	form = RegisterForm()
@@ -117,7 +122,7 @@ def newuser():
 			username=form.username.data,
 			password=form.password.data,
 			firstname=form.firstname.data,
-			lastname= form.lastname.data,
+			lastname=form.lastname.data,
 			hostel=form.hostel.data,
 			year=form.year.data,
 			room=form.room.data
@@ -128,6 +133,7 @@ def newuser():
 		return redirect(url_for('home'))
 	return render_template('newuser.html', form=form)
 
+
 @app.route('/logout')
 @login_required
 def logout():
@@ -135,11 +141,13 @@ def logout():
 	flash('You have been logged out')
 	return redirect(url_for('login'))
 
+
 @app.route('/search', methods=['GET', 'POST'])
 @login_required
 def search():
 	form = SearchForm()
 	return render_template('search.html', form=form)
+
 
 @app.route('/results', methods=['GET', 'POST'])
 def results():
@@ -176,22 +184,27 @@ def results():
 	else:
 		return redirect(url_for('search'))
 
+
 @app.route('/filetransfer/', defaults={'room_name': 'default'})
 @app.route('/filetransfer/<room_name>')
 @login_required
 def filetransfer(room_name):
 	return render_template('filetransfer.html', room_name=room_name)
 
+
 clients = {}
+
 
 def logger(text):
 	array = ['Message from server: ']
 	array.append(text)
 	emit('logger', array)
 
+
 @socketio.on('got connected')
 def handle_got_connected():
 	print('Received id: ' + str(request.namespace.socket.sessid))
+
 
 @socketio.on('create or join')
 def create_or_join(room):
@@ -220,10 +233,14 @@ def create_or_join(room):
 		print "Room is full"
 		emit('full', room)
 
+
+
 @socketio.on('message')
 def message(message):
 	logger('Client said: ' + str(message))
 	emit('message', message, broadcast=True)
+
+
 
 @socketio.on('on_disconnect')
 def on_disconnect(room):
@@ -232,6 +249,7 @@ def on_disconnect(room):
 		if request.namespace.socket.sessid in clients[str(room)] is not None:
 			print 'Removed'
 			clients[room].remove(request.namespace.socket.sessid)
+
 
 @socketio.on('leave')
 def on_leave(room):
@@ -245,4 +263,4 @@ def on_leave(room):
 
 #start the server with the run method
 if __name__ == '__main__':
-	socketio.run(app)
+	socketio.run(app, use_reloader=True, host="0.0.0.0", port=5000)

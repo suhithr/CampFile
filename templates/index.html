@@ -1,4 +1,13 @@
 {% extends "base.html" %}
+{% block head %}
+	<title>Campfile Home</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js">
+	</script>
+	<script>window.jQuery || document.write('<script src="{{
+  url_for('static', filename='jquery-1.11.3.min.js') }}">\x3C/script>')</script>
+	<script src="{{ url_for('static', filename='display.js') }}"></script>
+
+{% endblock head %}
 {% block content %}
 	<div id="hostelcontent">
 		{% for file in files.items %}
@@ -6,6 +15,20 @@
 				{{ file.name }} -> {{file.ownerhostel }} -> {{ file.size }} 
 			</div>
 		{% endfor %}
+		{% if files.has_prev %}
+			<a href="{{ url_for('home', page= files.prev_num) }}">
+				Previous Page
+			</a>
+		{% else %}
+			Previous Page
+		{% endif %}
+		{% if files.has_next %}
+			<a href="{{ url_for('home', page=files.next_num) }}">
+				Next Page
+			</a>
+		{% else %}
+			Next Page
+		{% endif %}
 	</div>
 
 {% endblock content %}
