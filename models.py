@@ -22,15 +22,17 @@ class filestable(db.Model):
 	mediatype = db.Column(db.String, nullable=False)
 	ownerid = db.Column(db.String, nullable=False)
 	ownerhostel = db.Column(db.String, nullable=False)
+	views = db.Column(db.Integer, nullable=False)
 	search_vector = db.Column(TSVectorType('name', 'ownerhostel'))
 
-	def __init__(self, name, filetype, size, mediatype, ownerid, ownerhostel):
+	def __init__(self, name, filetype, size, mediatype, ownerid, ownerhostel, views):
 		self.name = name
 		self.filetype  = filetype
 		self.size = size
 		self.mediatype = mediatype
 		self.ownerid = ownerid
 		self.ownerhostel = ownerhostel
+		self.views = views
 '''
 	def __repr__(self):
 		return "<Filename is '%s'" % (self.name)

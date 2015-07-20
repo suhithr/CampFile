@@ -52,10 +52,15 @@ login_manager.init_app(app)
 
 from models import *
 
-@app.route('/')
-@login_required
-def home():
-	return redirect(url_for('add'))
+@app.route('/', methods=['GET', 'POST'])
+@app.route('/index', methods=['GET', 'POST'])
+@app.route('/index/<int:page>', methods=['GET', 'POST'])
+def home(page=1):
+	if current_user.is_authenticated():
+		files = filestable.query.filter_by(ownerhostel = current_user.hostel).paginate(page,app.config["FILES_PER_PAGE"], False)
+		return render_template('index.html', files=files)
+	else:
+		return redirect(url_for('add'))
 
 @app.route('/add', methods=['GET', 'POST'])
 @login_required
@@ -67,7 +72,7 @@ def add():
 		
 		for i in range(0, len(receivedNames)):
 			securename = secure_filename(receivedNames[i])
-			qry = filestable(unicode(securename), receivedExtns[i], receivedSizes[i], 'misc', current_user.id, current_user.hostel)
+			qry = filestable(unicode(securename), receivedExtns[i], receivedSizes[i], 'misc', current_user.id, current_user.hostel, 0)
 			db.session.add(qry)
 			db.session.commit()
 
