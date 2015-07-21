@@ -5,6 +5,11 @@ With this part of the app, the metadata (Filename, Type, Size, Owner, etc) gets 
 
 ####P2P File Transfer
 Selected files of limited size can be sent between users via WebRTC DataChannels.
+
+####Running For Multiple Clients:
+This Works better with a gunicorn server. Instead of running `$ python app.py`
+run `gunicorn --worker-class socketio.sgunicorn.GeventSocketIOWorker app:app`
+
 ######Usage:
 * The route is `/filetransfer` 
 * Create 2 connections(open 2 tabs at this route)

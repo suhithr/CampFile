@@ -177,8 +177,6 @@ function readyFunction(room_name) {
 		console.log('Creating peer connection, initiator ' + isInitiator + ' Ice Servers: ' + iceServers);
 		pC = new RTCPeerConnection(iceServers, options);
 
-		pC.oniceconnectionstatechange = handleICEConnectionStateChange;
-
 		// send any ice candidate to the other peer
 		pC.onicecandidate = function(iceevent) {
 			console.log('onicecandidate event fired, event: ' + iceevent);

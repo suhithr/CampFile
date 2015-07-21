@@ -58,7 +58,7 @@ from models import *
 def home(page=1):
 	if current_user.is_authenticated():
 		files = filestable.query.filter_by(ownerhostel = current_user.hostel).paginate(page,app.config["FILES_PER_PAGE"], False)
-		for i in range(0, len(files.items)):
+		for i in xrange(0, len(files.items)):
 			files.items[i].name = files.items[i].name.replace("_"," ")
 		return render_template('index.html', files=files)
 	else:
@@ -72,7 +72,7 @@ def add():
 		receivedSizes = request.json["sizes"]
 		receivedExtns = request.json["extensions"]
 		
-		for i in range(0, len(receivedNames)):
+		for i in xrange(0, len(receivedNames)):
 			securename = secure_filename(receivedNames[i])
 			qry = filestable(unicode(securename), receivedExtns[i], receivedSizes[i], 'misc', current_user.id, current_user.hostel, 0)
 			db.session.add(qry)
@@ -170,7 +170,7 @@ def results():
 			print 'Type of dbresults[0] is : ' + str(type(dbresults[0]))
 			dbresultsname = []
 			print 'AND NOW ' + str(dbresults[0].ownerhostel)
-			for i in range(0, len(dbresults)):
+			for i in xrange(0, len(dbresults)):
 				print str(type(dbresults[i]))
 				dbresultsname.append(str(dbresults[i].name.replace("_"," ")))
 				i = i + 1
@@ -223,7 +223,7 @@ def create_or_join(room):
 		logger('Client ID ' + request.namespace.socket.sessid + ' created room ' + str(room))
 		print 'Client ID ' + request.namespace.socket.sessid + ' created room ' + str(room)
 		emit('created', room, request.namespace.socket.sessid)
-	elif numClients == 2:
+	elif numClients <= 2:
 		logger('Client ID ' + request.namespace.socket.sessid + ' joined room ' + str(room))
 		print 'Client ID ' + request.namespace.socket.sessid + ' joined room ' + str(room)
 		join_room(str(room))
@@ -263,4 +263,4 @@ def on_leave(room):
 
 #start the server with the run method
 if __name__ == '__main__':
-	socketio.run(app, use_reloader=True, host="0.0.0.0", port=5000)
+	socketio.run(app, host='127.0.0.1', port=4000,policy_server=False)
