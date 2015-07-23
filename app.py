@@ -1,12 +1,16 @@
 #!/usr/bin/python
-from flask import Flask, render_template, url_for, jsonify, request, session, redirect, flash
+from flask import Flask, Response, render_template, url_for, jsonify, request, session, redirect, flash
 from werkzeug import secure_filename
 from flask.ext.sqlalchemy import SQLAlchemy, BaseQuery
 from flask.ext.bcrypt import Bcrypt
 from flask.ext.socketio import SocketIO, emit, send, join_room, leave_room
 from flask.ext.login import LoginManager, login_user, login_required, logout_user, current_user
 from sqlalchemy_searchable import search, make_searchable
-#from flask.ext.uploads import save, Upload, delete
+import gevent
+import gevent.monkey
+from gevent.pywsgi import WSGIServer
+gevent.monkey.patch_all()
+
 import os
 import json
 from fuzzywuzzy import process
@@ -52,6 +56,9 @@ login_manager.init_app(app)
 
 from models import *
 
+onlineUsers = [];
+
+
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/index', methods=['GET', 'POST'])
 @app.route('/index/<int:page>', methods=['GET', 'POST'])
@@ -63,6 +70,27 @@ def home(page=1):
 		return render_template('index.html', files=files)
 	else:
 		return redirect(url_for('add'))
+
+
+def event_stream():
+	count = 0
+	while True:
+		gevent.sleep(2)
+		yield 'data: %s\n\n' % count
+		count += 1
+
+
+@app.route('/sse_event_source')
+def sse_request():
+	return Response(
+			event_stream(),
+			mimetype='text/event-stream')
+
+
+@app.route('/sse')
+def sse_page():
+	return render_template('sse.html')
+
 
 @app.route('/add', methods=['GET', 'POST'])
 @login_required
@@ -191,6 +219,10 @@ def results():
 def filetransfer(room_name):
 	return render_template('filetransfer.html', room_name=room_name)
 
+
+@app.route('/sse')
+def sse():
+	return redirect(url_for('home'))
 
 clients = {}
 

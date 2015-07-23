@@ -33,10 +33,10 @@ class filestable(db.Model):
 		self.ownerid = ownerid
 		self.ownerhostel = ownerhostel
 		self.views = views
-'''
+
 	def __repr__(self):
 		return "<Filename is '%s'" % (self.name)
-'''
+
 
 class User(db.Model):
 	__tablename__ = 'user'
@@ -49,6 +49,7 @@ class User(db.Model):
 	hostel = db.Column(db.String, nullable=False)
 	room = db.Column(db.String, nullable=False)
 	year = db.Column(db.String, nullable=False)
+	status = db.Column(db.String, nullable=True)
 
 
 	def __init__(self, username, password, firstname, lastname, hostel, room, year):

@@ -20,6 +20,7 @@ function readyFunction(room_name) {
 	/* Initial Setup */
 	var iceServers = {
 		'iceServers': [
+			{url: 'stun:23.21.150.121'},
 			{url:'stun:stun.l.google.com:19302'},
 			{url:'stun:stun1.l.google.com:19302'},
 			{url:'stun:stun2.l.google.com:19302'},
@@ -82,7 +83,7 @@ function readyFunction(room_name) {
 
 	console.log('Room ought to be: ' + room);
 
-	//This seems to be called only after the 'create and join' emit is called
+	//This seems to be called only after the 'create and join' emit is called rendering it useless
 	/*socket.on('connect', function() {
 		console.log(this.socket.sessionid)
 		socket.emit('got connected');
@@ -96,16 +97,20 @@ function readyFunction(room_name) {
 	socket.on('joined', function(room, clientId) {
 		console.log('Joined a room : ' + room + ' - my client id is: ' + clientId);
 		isInitiator = false;
-		if(restart === true ) {
+		if(restart == true ) {
 			isInitiator = true;
 		}
 	});
 
 	socket.on('full', function(room, clientId) {
 		//The idea is to create a new room for them
-		console.log('Room : ' + room + ' is full. A new room will be created for you.');
 		var newRoom = prompt('Enter a new room to join: ');
-		window.location.reload();
+		if(room != "default") {
+			window.location = roomURL.innerText.replace(roomURL.innerText.split('/')[4], newRoom);
+		}
+		else {
+			window.location = roomURL.innerText + newRoom;
+		}
 	});
 
 	socket.on('nowready', function() {
@@ -193,7 +198,7 @@ function readyFunction(room_name) {
 			}
 		};
 
-		
+
 		// if it's the initiator it needs to create the data channel
 		if(isInitiator) {
 			console.log('Creating the data channel');
@@ -313,7 +318,7 @@ function readyFunction(room_name) {
 		}
 		else { //Assuming it's chrome
 			chunkLen = 16000;
-		}	
+		}
 		var file = theFile;
 		var len = file.size;
 		var n = len / chunkLen | 0;
@@ -329,15 +334,8 @@ function readyFunction(room_name) {
 			var reader = new FileReader();
 			reader.onload = (function() {
 				return function(e) {
-					console.log('Buffered amount ' + dataChannel.bufferedAmount);
-					if(dataChannel.bufferedAmount > 16000000 || dataChannel.readyState != 'open') {
-						window.setTimeout(function() {
-							dataChannel.send(e.target.result);
-						}, 500);
-					}
-					else {
-						dataChannel.send(e.target.result);
-					}
+					dataChannel.send(e.target.result);
+					console.log("Sent chunk of size " + e.target.result.byteLength);
 					if( len > offset + e.target.result.byteLength) {
 						window.setTimeout(sliceFile, 0, offset + chunkLen);
 					}

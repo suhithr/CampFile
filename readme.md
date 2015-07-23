@@ -33,4 +33,6 @@ run `gunicorn --worker-class socketio.sgunicorn.GeventSocketIOWorker app:app`
 - [x] Provide Chrome Functionality
 - [ ] Provide cross-browser functionality *Done to a limited extent*
 - [x] Make Download User-Friendly, added a name, and it's automatically filled in
-- [ ] Integrate with login for CampFile
+- [x] Integrate with login for CampFile
+- [ ] Allow users to request
+- [ ] Put gunicorn behind nginx, to protect against DDOS
