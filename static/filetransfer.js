@@ -39,7 +39,7 @@ function readyFunction(room_name) {
 	var options = {
 		optional: [
 			{DtlsSrtpKeyAgreement: true}//, //For Chrome to work with Firefox
-			//{RtpDataChannels: true} //For DataChannels to work on Firefox
+			//{RtpDataChannels: true} //For DataChannels to work on Firefox, RTP is now outdated
 		]
 	};
 
@@ -147,10 +147,10 @@ function readyFunction(room_name) {
 		roomURL.innerHTML = '<a href=' + window.location.href + '>' + window.location.href + '</a>';
 		console.log('Updated URL is: ' + url);
 	}
-
+/*
 	function clue(text) {
 		console.log((window.performance.now / 1000).toFixed(3) + ': ' + text);
-	}
+	} */
 
 	/* PeerConnection and DataChannel */
 
@@ -202,7 +202,7 @@ function readyFunction(room_name) {
 		// if it's the initiator it needs to create the data channel
 		if(isInitiator) {
 			console.log('Creating the data channel');
-			dataChannel = pC.createDataChannel('fileChannel', {reliable: false});
+			dataChannel = pC.createDataChannel('fileChannel', {reliable: true});
 			dataChannel.binaryType = "arraybuffer";
 			onDataChannelCreated(dataChannel);
 
@@ -314,7 +314,7 @@ function readyFunction(room_name) {
 		//Split datachannel message into proper sized chunks, getting the number of chunks
 		var chunkLen;
 		if(webrtcDetectedBrowser === 'firefox') {
-			chunkLen = 16000;
+			chunkLen = 16000; //Used to be 64kb
 		}
 		else { //Assuming it's chrome
 			chunkLen = 16000;

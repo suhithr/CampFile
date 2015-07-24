@@ -12,7 +12,7 @@
 	<div id="hostelcontent">
 		{% for file in files.items %}
 			<div id="{{ file.id }}">
-				{{ file.name }} -> {{file.ownerhostel }} -> {{ file.size }} 
+				{{ file.name }} -> {{file.ownerhostel }} -> {{ file.size }}
 			</div>
 		{% endfor %}
 		{% if files.has_prev %}
@@ -30,5 +30,7 @@
 			Next Page
 		{% endif %}
 	</div>
+
+	<input type="button" id="startrequest">StartRequest</input>
 
 {% endblock content %}

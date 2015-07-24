@@ -3,4 +3,8 @@ function readyFunction(listFromDb) {
 		listFromDb[i].name = listFromDb.name.replace(/_/g," ");
 		console.log(listFromDb[i].name);
 	}
+	button.addEventListener('click', requestSend);
+	function requestSend() {
+
+	}
 }

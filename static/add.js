@@ -66,13 +66,13 @@ function readyFunction() {
 
 		var files = e.target.files; //FileList
 		$("div#input").append("");
-		for (var i = 0, f; f = files[i]; ++i) {			
+		for (var i = 0, f; f = files[i]; ++i) {
 
-			
+
 			console.log("name " + f.name);
 			console.log("size " + f.size);
 			console.log("extn " + String(f.name.substr((~-f.name.lastIndexOf(".") >>> 0) + 2 ) ));
-			
+
 			var calextn = f.name.substr((~-f.name.lastIndexOf(".") >>> 0) + 2);
 			calextn = String(calextn).toLowerCase();
 
@@ -104,8 +104,9 @@ function readyFunction() {
 				document.getElementById(fId).defaultValue = String(f.name);
 				document.getElementById('mediatype' + String(i)).options[specNo].selected = true;
 
-			}	
+			}
 		}
+		$("input[type='text']").attr('size', 70);
 
 		//Sending the Checked Files
 		$('#addFiles').click( function() {
@@ -113,7 +114,7 @@ function readyFunction() {
 				if(this.checked) {
 
 					var cbId = parseInt(this.id);
-					
+
 					var calextn = files[cbId].name.substr((~-files[cbId].name.lastIndexOf(".") >>> 0) + 2);
 					calextn = String(calextn).toLowerCase();
 					if( calextn === "") {
@@ -141,7 +142,7 @@ function readyFunction() {
 			var form_data = '{ "names" : [' + names + '], "sizes" : [' + sizes + '], "extensions" : [' + extns + ']}';
 			console.log(form_data);
 			//Converts JSON String to an object, also check JSON Validity of string
-			var JsonFormData = JSON.parse(form_data); 
+			var JsonFormData = JSON.parse(form_data);
 			console.log(JsonFormData);
 			$.ajax({
 				type: "POST", //Since the default is GET
@@ -150,10 +151,14 @@ function readyFunction() {
 				processData: false, //So it doesn't automatically get converted to strings
 				contentType: 'application/json;charset=UTF-8', //So it doesn't set any header
 				dataType: 'json',
+				data: JSON.stringify(JsonFormData, null, '\t'),
 				success: function(data) {
 					console.log("Data Received!");
 				},
-				data: JSON.stringify(JsonFormData, null, '\t'),
+				error: function(jqxhr, status, message) {
+					console.log("Sorry, there seems to have been an erro. Don't worry it's probably our fault :)");
+					console.log("Error : " + message);
+				}
 			});
 		});
 	}
