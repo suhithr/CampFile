@@ -5,11 +5,12 @@ from sqlalchemy_searchable import SearchQueryMixin, make_searchable
 from sqlalchemy_utils.types import TSVectorType
 
 
-
+#For using the searchquery mixin so that the specified fields become searchable
 class NameQuery(BaseQuery, SearchQueryMixin):
 	pass
 
 
+#For holding the information about each file
 class filestable(db.Model):
 	query_class = NameQuery
 	__tablename__ = 'filestable'
@@ -38,6 +39,7 @@ class filestable(db.Model):
 		return "<Filename is '%s'" % (self.name)
 
 
+#For information about registered users
 class User(db.Model):
 	__tablename__ = 'user'
 

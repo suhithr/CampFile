@@ -1,4 +1,7 @@
 #!/usr/bin/python
+import os
+import json
+
 from flask import Flask, Response, render_template, url_for, jsonify, request, session, redirect, flash
 from werkzeug import secure_filename
 from flask.ext.sqlalchemy import SQLAlchemy, BaseQuery
@@ -11,30 +14,9 @@ import gevent.monkey
 from gevent.pywsgi import WSGIServer
 gevent.monkey.patch_all()
 
-import os
-import json
 from fuzzywuzzy import process
 from forms import *
 
-#TODO
-#Check why stuff is happening out of order - Done, cuz it's working
-#Build on Homepage a way to upload the file details and display -Done
-#Now, save to postgres database - Done
-#Make login possible - Done
-#Make it check passwords on line 81 - Done
-#Allow folder upload in Chrome (USER FRIENDLINESS IS KING) - Done
-#Find limits of folder upload - Done, depends mostly on number of files
-#Read the flask-wtf docs on CSRF for sending it with the AJAX request - Done
-#Add personal instant file sharing with WebRTC - Done
-#See how big the files can go - Done, 100GB At once possible to be read by browser, not just make javascript break up the file while sending
-
-#Add an option to view the files of others in the index in the home page (after login that is)
-#
-#Add an option to change file names before uploading - Done
-#Make it to see only your hostel stuff and friends
-
-#Add search - Done
-#Make search with dropdown -
 
 #Creating the flask app and pointing to the config
 app = Flask(__name__)
@@ -99,7 +81,7 @@ def add():
 		receivedNames = request.json["names"]
 		receivedSizes = request.json["sizes"]
 		receivedExtns = request.json["extensions"]
-		
+
 		for i in xrange(0, len(receivedNames)):
 			securename = secure_filename(receivedNames[i])
 			qry = filestable(unicode(securename), receivedExtns[i], receivedSizes[i], 'misc', current_user.id, current_user.hostel, 0)
@@ -126,7 +108,7 @@ def login():
 
 	error = ''
 	form = LoginForm(request.form)
-	if request.method == 'POST': 
+	if request.method == 'POST':
 		if form.validate_on_submit():
 			user = User.query.filter_by(username=request.form['username']).first()
 			if user is not None and bcrypt.check_password_hash(user.password, request.form['password']):
