@@ -1,5 +1,6 @@
-##CampFile(Under Construction)
-This is a Flask App, that is meant to make filesharing easier in institutions where access to high-speed connectivity like LAN is limited.
+##CampFile
+This is a website, that is meant to make filesharing easier in institutions where access to high-speed connectivity like LAN is limited. It allows users to share files securely P2P directly between their respective browsers. This is more secure and also saves on server bandwidth.
+
 ####Download Index
 With this part of the app, the metadata (Filename, Type, Size, Owner, etc) gets uploaded. Multi-Folder Upload is supported only in Google Chrome. 
 
@@ -19,20 +20,6 @@ run `gunicorn --worker-class socketio.sgunicorn.GeventSocketIOWorker app:app`
 * When transfer is complete right click the link and click `Save Link As..`, in Firefox some files can be viewed in the browser itself, by `Open Link in New Tab`
 
 ##TODO:
-- [x] Fetch metadata of files
-- [x] Implement Ajax Request to send Data to Database
-- [x] Implement multi-folder upload
 - [ ] Show User Progress of indexing
-- [x] Build Fuzzy Search Functionality
-- [x] Search consider hostel for results too
-- [ ] Integrate with the app
-- [x] Create Peer Connection and DataChannel
-- [x] Implement sending of text between peers
-- [x] Implement sending of files between peers
-- [x] Chunking and Assembling of Files
-- [x] Provide Chrome Functionality
-- [ ] Provide cross-browser functionality *Done to a limited extent*
-- [x] Make Download User-Friendly, added a name, and it's automatically filled in
-- [x] Integrate with login for CampFile
-- [ ] Allow users to request
+- [ ] Allow users to request for files as a community
 - [ ] Put gunicorn behind nginx, to protect against DDOS
